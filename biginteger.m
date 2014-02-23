@@ -695,7 +695,7 @@ pos_plus(i(L1, D1), i(L2, D2)) = Out :-
 
 add_pairs(Div, i(L1, D1), i(L2, D2), Ds) :-
     ( L1 = L2 ->
-        add_pairs_equal(Div, D1, D2, Ds)
+        add_pairs_equal(Div, L1, D1, D2, Ds)
     ; L1 < L2, D2 = [H2 | T2] ->
         add_pairs(Div1, i(L1, D1), i(L2 - 1, T2), Ds1),
         chop(H2 + Div1, Div, Mod),
@@ -708,14 +708,40 @@ add_pairs(Div, i(L1, D1), i(L2, D2), Ds) :-
         error("biginteger.add_pairs")
     ).
 
-:- pred add_pairs_equal(digit::out, list(digit)::in, list(digit)::in,
+:- pred add_pairs_equal(digit::out, int::in, list(digit)::in, list(digit)::in,
     list(digit)::out) is det.
 
-add_pairs_equal(0, [], _, []).
-add_pairs_equal(0, [_ | _], [], []).
-add_pairs_equal(Div, [X | Xs], [Y | Ys], [Mod | TailDs]) :-
-    add_pairs_equal(DivTail, Xs, Ys, TailDs),
+add_pairs_equal(0, _, [], _, []).
+add_pairs_equal(0, _, [_ | _], [], []).
+add_pairs_equal(Div, L, [X | Xs], [Y | Ys], [Mod | TailDs]) :-
+    add_pairs_equal(DivTail, L, Xs, Ys, TailDs),
     chop(X + Y + DivTail, Div, Mod).
+
+% add_pairs_equal(Div, Length, [X | Xs], [Y | Ys], Res) :-
+%     array.init(Length, 0, Arr),
+%     add_pairs_equal_array(Div, 0, [X | Xs], [Y | Ys], Arr, ResArray),
+%     Res = array.to_list(ResArray).
+
+:- pred add_pairs_equal_array(digit::out, int::in, list(digit)::in, list(digit)::in, array(digit)::array_di, array(digit)::array_uo) is det.
+
+add_pairs_equal_array(Carry, Elem, XList, YList, ResIn, ResOut) :-
+    ( ( [X] = XList,
+          [Y] = YList) ->
+        chop(X + Y, Carry, Mod),
+        array.unsafe_set(Elem, Mod, ResIn, Res0),
+        ResOut = Res0
+    ;
+        ( ( [X | Xs] = XList,
+              [Y | Ys] = YList) ->
+            add_pairs_equal_array(CarryOld, Elem + 1, Xs, Ys, ResIn, ResOut0),
+            chop(X + Y + CarryOld, Carry, Mod),
+            array.unsafe_set(Elem, Mod, ResOut0, ResOut)
+        )
+    ;
+        error("lists too small")
+    ).
+
+
 
 :- func pos_minus(biginteger, biginteger) = biginteger.
 
@@ -756,13 +782,13 @@ pos_mul(i(L1, Ds1), i(L2, Ds2)) =
         pos_mul_karatsuba(i(L2, Ds2), i(L1, Ds1))
     ).
 
-% use quadratic multiplication for less than threshold digits
+% Use quadratic multiplication for less than threshold digits.
 :- func karatsuba_threshold = int.
 
 karatsuba_threshold = 35.
 
-% use parallel execution if number of digits of split numbers is larger
-% then this threshold
+% Use parallel execution if number of digits of split numbers is larger
+% then this threshold.
 :- func karatsuba_parallel_threshold = int.
 
 karatsuba_parallel_threshold = karatsuba_threshold * 10.
@@ -773,34 +799,33 @@ karatsuba_parallel_threshold = karatsuba_threshold * 10.
 pos_mul_karatsuba(i(L1, Ds1), i(L2, Ds2)) = Res :-
     ( L1 < karatsuba_threshold ->
         Res = pos_mul_list(Ds1, biginteger.zero, i(L2, Ds2))
-        %Res = pos_mul_list_arr(i(L1, Ds1), i(L2, Ds2))
     ;
-      ( L2 < L1 ->
-          error("biginteger.pos_mul_karatsuba: second factor smaller")
-      ;
-          Middle = L2 div 2,
-          HiDigits = L2 - Middle,
-          HiDigitsSmall = max(0, L1 - Middle),
-          % split Ds1 in [L1 - Middle];[Middle] digits if L1 > Middle
-          % or leave as [L1] digits
-          list.split_upto(HiDigitsSmall, Ds1, Ds1_upper, Ds1_lower),
-          % Split Ds2 in [L2 - Middle; Middle] digits
-          list.split_upto(HiDigits, Ds2, Ds2_upper, Ds2_lower),
-          LoDs1 = i(min(L1, Middle), Ds1_lower),
-          LoDs2 = i(Middle, Ds2_lower),
-          HiDs1 = i(HiDigitsSmall, Ds1_upper),
-          HiDs2 = i(HiDigits, Ds2_upper),
-          ( Middle > karatsuba_parallel_threshold ->
-            ( Res0 = pos_mul(LoDs1, LoDs2) &
-              Res1 = pos_mul(LoDs1 + HiDs1, LoDs2 + HiDs2) &
-              Res2 = pos_mul(HiDs1, HiDs2))
-          ;
-            ( Res0 = pos_mul(LoDs1, LoDs2),
-              Res1 = pos_mul(LoDs1 + HiDs1, LoDs2 + HiDs2),
-              Res2 = pos_mul(HiDs1, HiDs2))
-          ),
-          Res = big_left_shift(Res2, 2*Middle*log2base) +
-                big_left_shift(Res1 - (Res2 + Res0), Middle*log2base) + Res0
+        ( L2 < L1 ->
+            error("biginteger.pos_mul_karatsuba: second factor smaller")
+        ;
+            Middle = L2 div 2,
+            HiDigits = L2 - Middle,
+            HiDigitsSmall = max(0, L1 - Middle),
+            % split Ds1 in [L1 - Middle];[Middle] digits if L1 > Middle
+            % or leave as [L1] digits
+            list.split_upto(HiDigitsSmall, Ds1, Ds1Upper, Ds1Lower),
+            % Split Ds2 in [L2 - Middle; Middle] digits
+            list.split_upto(HiDigits, Ds2, Ds2Upper, Ds2Lower),
+            LoDs1 = i(min(L1, Middle), Ds1Lower),
+            LoDs2 = i(Middle, Ds2Lower),
+            HiDs1 = i(HiDigitsSmall, Ds1Upper),
+            HiDs2 = i(HiDigits, Ds2Upper),
+            ( Middle > karatsuba_parallel_threshold ->
+                Res0 = pos_mul(LoDs1, LoDs2) &
+                Res1 = pos_mul(LoDs1 + HiDs1, LoDs2 + HiDs2) &
+                Res2 = pos_mul(HiDs1, HiDs2)
+            ;
+                Res0 = pos_mul(LoDs1, LoDs2),
+                Res1 = pos_mul(LoDs1 + HiDs1, LoDs2 + HiDs2),
+                Res2 = pos_mul(HiDs1, HiDs2)
+            ),
+            Res = big_left_shift(Res2, 2*Middle*log2base) +
+                  big_left_shift(Res1 - (Res2 + Res0), Middle*log2base) + Res0
       )
     ).
 
