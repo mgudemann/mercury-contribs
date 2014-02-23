@@ -328,8 +328,8 @@ main(!IO) :-
       solutions(testBiginteger2, Liste2),
       solutions(testBiginteger3, Liste3),
       solutions(testBiginteger4, Liste4),
-      solutions(testBiginteger4, Liste5),
-      solutions(testBiginteger4, Liste6)
+      solutions(testBiginteger5, Liste5),
+      solutions(testBiginteger6, Liste6)
     ),
     %% execute integer tests
     (
@@ -337,8 +337,8 @@ main(!IO) :-
       solutions(testInteger2, IListe2),
       solutions(testInteger3, IListe3),
       solutions(testInteger4, IListe4),
-      solutions(testInteger4, IListe5),
-      solutions(testInteger4, IListe6)
+      solutions(testInteger5, IListe5),
+      solutions(testInteger6, IListe6)
     ),
     (
       (
