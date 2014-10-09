@@ -3,10 +3,13 @@
 
 :- type psqueue(K, P).
 
-:- func psqueue.init = psqueue(K, V).
+:- func psqueue.init = psqueue(K, P).
 :- pred psqueue.init(psqueue(K, P)::out) is det.
 
 :- pred psqueue.is_empty(psqueue(K, P)::in) is semidet.
+
+:- pred psqueue.singleton(K::in, P::in, psqueue(K, P)::out) is det.
+:- func psqueue.singleton(K, P) = psqueue(K, P).
 
 :- func psqueue.max_key(psqueue(K, P)) = K is semidet.
 :- pred psqueue.max_key(psqueue(K, P)::in, K::out) is semidet.
@@ -14,12 +17,13 @@
 :- implementation.
 
 :- type psqueue(K, P) --->
-          void
-        ; winner(K, P, ltree(K, P), K).
+    void
+    ; winner(K, P, ltree(K, P), K).
 
 :- type ltree(K, P) --->
-          start
-        ; loser(K, P, ltree(K, P), K, ltree(K, P)).
+    start
+    ; lloser(K, P, ltree(K, P), K, ltree(K, P))
+    ; rloser(K, P, ltree(K, P), K, ltree(K, P)).
 
 
 % create empty psqueue
@@ -32,6 +36,13 @@ psqueue.init(void).
 % check for empty psqueue
 psqueue.is_empty(void).
 
+
+% create singleton psqueue
+singleton(K, P) = Res :-
+    singleton(K, P, Res).
+
+singleton(K, P, PSQ) :-
+    PSQ = winner(K, P, start, K).
 
 % extract maximal (highest priority) key
 max_key(PSQ) = K :-
@@ -82,3 +93,8 @@ second_best(LTree, Key) = Res :-
 del_min(PSQ) = Res :-
     PSQ = winner(_, _, L, MaxKey),
     Res = second_best(L, MaxKey).
+
+:- pred loser_right(ltree(K, P)::in) is semidet.
+loser_right(L) :-
+    L = loser(LK, _, _, SplitKey, _),
+    compare((>), LK, SplitKey).
