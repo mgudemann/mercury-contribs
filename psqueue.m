@@ -19,6 +19,20 @@
 
 :- func del_min(psqueue(K, P)) = psqueue(K, P) is semidet.
 
+:- pred leq(V::in, V::in) is semidet.
+
+:- func min_view(psqueue(K, P)) = t_min_view(K, P) is det.
+:- func tournament_view(psqueue(K, P)) = t_tournament_view(K, P) is det.
+
+:- type t_min_view(K, P) --->
+    emtpy
+    ; min(K, P, psqueue(K, P)).
+
+:- type t_tournament_view(K, P) --->
+    emptySet
+    ; singleton(K, P)
+    ; tournament_between(psqueue(K, P), psqueue(K, P)).
+
 :- implementation.
 
 :- type psqueue(K, P) --->
@@ -124,7 +138,124 @@ del_min(PSQ) = Res :-
 
 % less or equal
 % is true if ValLeft =< ValRight
-:- pred leq(V::in, V::in) is semidet.
 leq(ValLeft, ValRight) :-
     compare(CMP, ValLeft, ValRight),
     ( CMP = (>) -> fail; true).
+
+min_view(PSQ) = Res :-
+    PSQ = void, Res = emtpy
+    ;
+    PSQ = winner(Key, Prio, LTree, MaxKey),
+    Res = min(Key, Prio, second_best(LTree, MaxKey)).
+
+tournament_view(PSQ) = Res :-
+    PSQ = void, Res = emptySet
+    ;
+    PSQ = winner(K, P, LTree, MaxKey),
+    (
+      LTree = start, Res = singleton(K, P)
+    ;
+      ( LTree = rloser(_, LK, LP, LL, SplitKey, LR)
+      ;
+          LTree = lloser(_, LK, LP, LL, SplitKey, LR)
+      ),
+      ( LK `leq` SplitKey ->
+          Res = tournament_between(winner(LK, LP, LL, SplitKey),
+                                   winner(K, P, LR, MaxKey))
+      ;
+          Res = tournament_between(winner(K, P, LL, SplitKey),
+                                   winner(LK, LP, LR, MaxKey))
+      )
+    ).
+
+:- func lookup(K, psqueue(K, P)) = P is semidet.
+lookup(K, PSQ) = lookup_tv(K, tournament_view(PSQ)).
+
+:- func lookup_tv(K, t_tournament_view(K, P)) = P is semidet.
+lookup_tv(K, TV) = Res :-
+    TV = singleton(Key, Prio),
+    Key = K,
+    Res = Prio
+    ;
+    TV = tournament_between(W1, W2),
+    W1 = winner(_, _, _, MaxKey1),
+    ( K `leq` MaxKey1 ->
+        Res = lookup(K, W1)
+    ;
+        Res = lookup(K, W2)
+    ).
+
+
+:- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
+adjust(F, K, PSQ) = adjust_tv(F, K, tournament_view(PSQ)).
+
+:- func adjust_tv(func(P) = P, K, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
+adjust_tv(Func, K, TV) = Res :-
+    TV = emptySet, Res = void
+    ;
+    TV = singleton(Key, Prio),
+    ( K = Key ->
+        Res = psqueue.singleton(Key, Func(Prio))
+    ;
+        Res = psqueue.singleton(Key, Prio)
+    )
+    ;
+    TV = tournament_between(T1, T2),
+    T1 = winner(_, _, _, MaxKey1),
+    ( K `leq` MaxKey1 ->
+        Res = tournament(adjust(Func, K, T1), T2)
+    ;
+        Res = tournament(T1, adjust(Func, K, T2))
+    ).
+
+:- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
+insert(IK, IP, PSQ) = insert_tv(IK, IP, tournament_view(PSQ)).
+
+:- func insert_tv(K, P, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
+insert_tv(IK, IP, TV) = Res :-
+    TV = emptySet, Res = void
+    ;
+    TV = singleton(Key, Prio),
+    compare(CMP, IK, Key),
+    ( CMP = (<),
+        Res = tournament(psqueue.singleton(Key, Prio),
+                         psqueue.singleton(IK, IP))
+    ;
+        CMP = (=),
+        Res = psqueue.singleton(IK, IP)
+    ;
+        CMP = (>),
+        Res = tournament(psqueue.singleton(IK, IP),
+                         psqueue.singleton(Key, Prio))
+    )
+    ;
+    TV = tournament_between(T1, T2),
+    T1 = winner(_, _, _, MaxKey1),
+    T2 = winner(_, _, _, _),
+    ( IK `leq` MaxKey1 ->
+        Res = tournament(insert(IK, IP, T1), T2)
+    ;
+        Res = tournament(T1, insert(IK, IP, T2))
+    ).
+
+:- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
+delete(DK, PSQ) = delete_tv(DK, tournament_view(PSQ)).
+
+:- func delete_tv(K, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
+delete_tv(DK, TV) = Res :-
+    TV = emptySet, Res = void
+    ;
+    TV = singleton(Key, Prio),
+    ( DK = Key ->
+        Res = void
+    ;
+        Res = psqueue.singleton(Key, Prio)
+    )
+    ;
+    TV = tournament_between(T1, T2),
+    T1 = winner(_, _, _, MaxKey1),
+    ( DK `leq` MaxKey1 ->
+        Res = tournament(delete(DK, T1), T2)
+    ;
+        Res = tournament(T1, delete(DK, T2))
+    ).
