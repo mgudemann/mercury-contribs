@@ -14,6 +14,9 @@
 :- func psqueue.max_key(psqueue(K, P)) = K is semidet.
 :- pred psqueue.max_key(psqueue(K, P)::in, K::out) is semidet.
 
+:- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P).
+:- pred tournament(psqueue(K, P)::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
+
 :- implementation.
 
 :- type psqueue(K, P) --->
@@ -51,7 +54,9 @@ max_key(PSQ, MaxKey) :-
         PSQ = winner(_, _, _, MaxKey).
 
 
-:- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P).
+tournament(PSQ0, PSQ1, PSQ) :-
+    PSQ = tournament(PSQ0, PSQ1).
+
 tournament(PSQ1, PSQ2) = Res :-
     ( PSQ1 = void,
         Res = PSQ2
@@ -76,25 +81,43 @@ tournament(PSQ1, PSQ2) = Res :-
 :- func second_best(ltree(K, P), K) = psqueue(K, P) is det.
 second_best(LTree, Key) = Res :-
     ( LTree = start,
-        Res = void
+      Res = void
     ;
-        ( LTree = rloser(_, LK, LP, L1, SplitKey, L2)
-        ;
-            LTree = lloser(_, LK, LP, L1, SplitKey, L2)
-        ),
-        compare(CMP, SplitKey, LK),
-        ( CMP = (<) ->
-            T1 = second_best(L1, SplitKey),
-            T2 = winner(LK, LP, L2, Key),
-            Res = tournament(T1, T2)
-        ;
-            T1 = winner(LK, LP, L1, SplitKey),
-            T2 = second_best(L2, Key),
-            Res = tournament(T1, T2)
-        )
+      ( LTree = rloser(_, LK, LP, L1, SplitKey, L2)
+      ;
+        LTree = lloser(_, LK, LP, L1, SplitKey, L2)),
+      compare(CMP, SplitKey, LK),
+      ( CMP = (<) ->
+          T1 = second_best(L1, SplitKey),
+          T2 = winner(LK, LP, L2, Key),
+          Res = tournament(T1, T2)
+      ;
+          T1 = winner(LK, LP, L1, SplitKey),
+          T2 = second_best(L2, Key),
+          Res = tournament(T1, T2)
+      )
     ).
 
 :- func del_min(psqueue(K, P)) = psqueue(K, P) is semidet.
 del_min(PSQ) = Res :-
     PSQ = winner(_, _, L, MaxKey),
     Res = second_best(L, MaxKey).
+
+% :- func lookup(K, psqueue(K, P)) = P is semidet.
+% lookup(Key, PSQ) = Res :-
+%     PSQ = winner(WKey, Prio, LTree, MaxKey),
+%     ( LTree = start,
+%         compare(CMP, Key, WKey),
+%         CMP = (=),
+%         Res = Prio
+%     ;
+%         ( LTree = lloser(_, _, _, LL, _, LR)
+%         ;
+%             LTree = rloser(_, _, _, LL, _, LR)),
+%         compare(CMP, MaxKey, Key),
+%         ( CMP = (<) ->
+%             Res = lookup(Key, LR)
+%         ;
+%             Res = lookup(Key, LL)
+%         )
+%     ).
