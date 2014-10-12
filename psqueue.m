@@ -3,19 +3,21 @@
 
 :- type psqueue(K, P).
 
-:- func psqueue.init = psqueue(K, P).
-:- pred psqueue.init(psqueue(K, P)::out) is det.
+:- func init = psqueue(K, P).
+:- pred init(psqueue(K, P)::out) is det.
 
-:- pred psqueue.is_empty(psqueue(K, P)::in) is semidet.
+:- pred is_empty(psqueue(K, P)::in) is semidet.
 
-:- pred psqueue.singleton(K::in, P::in, psqueue(K, P)::out) is det.
-:- func psqueue.singleton(K, P) = psqueue(K, P).
+:- pred singleton(K::in, P::in, psqueue(K, P)::out) is det.
+:- func singleton(K, P) = psqueue(K, P).
 
-:- func psqueue.max_key(psqueue(K, P)) = K is semidet.
-:- pred psqueue.max_key(psqueue(K, P)::in, K::out) is semidet.
+:- func max_key(psqueue(K, P)) = K is semidet.
+:- pred max_key(psqueue(K, P)::in, K::out) is semidet.
 
 :- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P).
 :- pred tournament(psqueue(K, P)::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
+
+:- func del_min(psqueue(K, P)) = psqueue(K, P) is semidet.
 
 :- implementation.
 
@@ -98,7 +100,6 @@ second_best(LTree, Key) = Res :-
       )
     ).
 
-:- func del_min(psqueue(K, P)) = psqueue(K, P) is semidet.
 del_min(PSQ) = Res :-
     PSQ = winner(_, _, L, MaxKey),
     Res = second_best(L, MaxKey).
