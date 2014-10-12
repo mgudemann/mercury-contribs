@@ -39,10 +39,12 @@
     void
     ; winner(K, P, ltree(K, P), K).
 
+:- type ltree_size == int.
+
 :- type ltree(K, P) --->
     start
-    ; lloser(int, K, P, ltree(K, P), K, ltree(K, P))
-    ; rloser(int, K, P, ltree(K, P), K, ltree(K, P)).
+    ; lloser(ltree_size, K, P, ltree(K, P), K, ltree(K, P))
+    ; rloser(ltree_size, K, P, ltree(K, P), K, ltree(K, P)).
 
 % create empty psqueue
 psqueue.init = PSQ :-
