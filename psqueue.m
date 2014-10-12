@@ -68,9 +68,8 @@ tournament(PSQ1, PSQ2) = Res :-
             Res = PSQ1
         ;
             PSQ2 = winner(K2, Prio2, L2, MaxKey2),
-            compare(CMP, Prio1, Prio2),
             Size = 0,
-            ( CMP = (<) ->
+            ( Prio1 `leq` Prio2 ->
                 % left wins
                 Res = winner(K1, Prio1, rloser(Size, K2, Prio2, L1, MaxKey1, L2), MaxKey2)
             ;
@@ -88,14 +87,13 @@ second_best(LTree, Key) = Res :-
       ( LTree = rloser(_, LK, LP, L1, SplitKey, L2)
       ;
         LTree = lloser(_, LK, LP, L1, SplitKey, L2)),
-      compare(CMP, SplitKey, LK),
-      ( CMP = (<) ->
-          T1 = second_best(L1, SplitKey),
-          T2 = winner(LK, LP, L2, Key),
-          Res = tournament(T1, T2)
-      ;
+      ( LK `leq` SplitKey ->
           T1 = winner(LK, LP, L1, SplitKey),
           T2 = second_best(L2, Key),
+          Res = tournament(T1, T2)
+      ;
+          T1 = second_best(L1, SplitKey),
+          T2 = winner(LK, LP, L2, Key),
           Res = tournament(T1, T2)
       )
     ).
@@ -103,6 +101,7 @@ second_best(LTree, Key) = Res :-
 del_min(PSQ) = Res :-
     PSQ = winner(_, _, L, MaxKey),
     Res = second_best(L, MaxKey).
+
 
 % :- func lookup(K, psqueue(K, P)) = P is semidet.
 % lookup(Key, PSQ) = Res :-
@@ -122,3 +121,10 @@ del_min(PSQ) = Res :-
 %             Res = lookup(Key, LL)
 %         )
 %     ).
+
+% less or equal
+% is true if ValLeft =< ValRight
+:- pred leq(V::in, V::in) is semidet.
+leq(ValLeft, ValRight) :-
+    compare(CMP, ValLeft, ValRight),
+    ( CMP = (>) -> fail; true).
