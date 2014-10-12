@@ -22,9 +22,8 @@
 
 :- type ltree(K, P) --->
     start
-    ; lloser(K, P, ltree(K, P), K, ltree(K, P))
-    ; rloser(K, P, ltree(K, P), K, ltree(K, P)).
-
+    ; lloser(int, K, P, ltree(K, P), K, ltree(K, P))
+    ; rloser(int, K, P, ltree(K, P), K, ltree(K, P)).
 
 % create empty psqueue
 psqueue.init = PSQ :-
@@ -63,10 +62,13 @@ tournament(PSQ1, PSQ2) = Res :-
         ;
             PSQ2 = winner(K2, Prio2, L2, MaxKey2),
             compare(CMP, Prio1, Prio2),
-            ( CMP = (>) ->
-                Res = winner(K2, Prio2, loser(K1, Prio1, L1, MaxKey2, L2), MaxKey2)
+            Size = 0,
+            ( CMP = (<) ->
+                % left wins
+                Res = winner(K1, Prio1, rloser(Size, K2, Prio2, L1, MaxKey1, L2), MaxKey2)
             ;
-                Res = winner(K1, Prio1, loser(K2, Prio2, L1, MaxKey1, L2), MaxKey2)
+                % right wins
+                Res = winner(K2, Prio2, lloser(Size, K1, Prio1, L1, MaxKey1, L2), MaxKey2)
             )
         )
     ).
@@ -76,7 +78,10 @@ second_best(LTree, Key) = Res :-
     ( LTree = start,
         Res = void
     ;
-        LTree = loser(LK, LP, L1, SplitKey, L2),
+        ( LTree = rloser(_, LK, LP, L1, SplitKey, L2)
+        ;
+            LTree = lloser(_, LK, LP, L1, SplitKey, L2)
+        ),
         compare(CMP, SplitKey, LK),
         ( CMP = (<) ->
             T1 = second_best(L1, SplitKey),
@@ -93,8 +98,3 @@ second_best(LTree, Key) = Res :-
 del_min(PSQ) = Res :-
     PSQ = winner(_, _, L, MaxKey),
     Res = second_best(L, MaxKey).
-
-:- pred loser_right(ltree(K, P)::in) is semidet.
-loser_right(L) :-
-    L = loser(LK, _, _, SplitKey, _),
-    compare((>), LK, SplitKey).
