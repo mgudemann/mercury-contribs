@@ -19,6 +19,12 @@
 
 :- func del_min(psqueue(K, P)) = psqueue(K, P) is semidet.
 
+:- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- func lookup(K, psqueue(K, P)) = P is semidet.
+
+
 :- pred leq(V::in, V::in) is semidet.
 
 :- func min_view(psqueue(K, P)) = t_min_view(K, P) is det.
@@ -170,7 +176,6 @@ tournament_view(PSQ) = Res :-
       )
     ).
 
-:- func lookup(K, psqueue(K, P)) = P is semidet.
 lookup(K, PSQ) = lookup_tv(K, tournament_view(PSQ)).
 
 :- func lookup_tv(K, t_tournament_view(K, P)) = P is semidet.
@@ -188,7 +193,6 @@ lookup_tv(K, TV) = Res :-
     ).
 
 
-:- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
 adjust(F, K, PSQ) = adjust_tv(F, K, tournament_view(PSQ)).
 
 :- func adjust_tv(func(P) = P, K, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
@@ -210,7 +214,6 @@ adjust_tv(Func, K, TV) = Res :-
         Res = tournament(T1, adjust(Func, K, T2))
     ).
 
-:- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
 insert(IK, IP, PSQ) = insert_tv(IK, IP, tournament_view(PSQ)).
 
 :- func insert_tv(K, P, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
@@ -240,7 +243,6 @@ insert_tv(IK, IP, TV) = Res :-
         Res = tournament(T1, insert(IK, IP, T2))
     ).
 
-:- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
 delete(DK, PSQ) = delete_tv(DK, tournament_view(PSQ)).
 
 :- func delete_tv(K, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
