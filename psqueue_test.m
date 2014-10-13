@@ -37,7 +37,7 @@ test_psqueue_single_del_min(PSQ) :-
     psqueue.singleton(1, 10, PSQ0),
     psqueue.singleton(0, 2, PSQ1),
     psqueue.tournament(PSQ1, PSQ0, PSQ2),
-    PSQ = del_min(PSQ2).
+    del_min(PSQ2, _, _, PSQ).
 
 :- pred test_psqueue_single_max_key(int::out, int::out) is semidet.
 test_psqueue_single_max_key(MaxKeyl, MaxKeyr) :-

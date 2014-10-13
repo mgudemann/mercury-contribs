@@ -17,7 +17,7 @@
 :- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P).
 :- pred tournament(psqueue(K, P)::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
-:- func del_min(psqueue(K, P)) = psqueue(K, P) is semidet.
+:- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out) is semidet.
 
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
@@ -29,6 +29,7 @@
 
 :- func min_view(psqueue(K, P)) = t_min_view(K, P) is det.
 :- func tournament_view(psqueue(K, P)) = t_tournament_view(K, P) is det.
+:- func tree_view(ltree(K, P)) = t_tree_view(K, P) is det.
 
 :- type t_min_view(K, P) --->
     emtpy
@@ -39,18 +40,22 @@
     ; singleton(K, P)
     ; tournament_between(psqueue(K, P), psqueue(K, P)).
 
+:- type t_tree_view(K, P) --->
+    leaf
+    ; node(K, P, ltree(K, P), K, ltree(K, P)).
+
 :- implementation.
 
 :- type psqueue(K, P) --->
     void
     ; winner(K, P, ltree(K, P), K).
 
-:- type ltree_size == int.
+:- type t_ltree_size == int.
 
 :- type ltree(K, P) --->
     start
-    ; lloser(ltree_size, K, P, ltree(K, P), K, ltree(K, P))
-    ; rloser(ltree_size, K, P, ltree(K, P), K, ltree(K, P)).
+    ; lloser(t_ltree_size, K, P, ltree(K, P), K, ltree(K, P))
+    ; rloser(t_ltree_size, K, P, ltree(K, P), K, ltree(K, P)).
 
 % create empty psqueue
 psqueue.init = PSQ :-
@@ -120,10 +125,9 @@ second_best(LTree, Key) = Res :-
       )
     ).
 
-del_min(PSQ) = Res :-
-    PSQ = winner(_, _, L, MaxKey),
-    Res = second_best(L, MaxKey).
-
+del_min(PSQ, MinKey, MinPrio, NewPSQ) :-
+    PSQ = winner(MinKey, MinPrio, L, MaxKey),
+    NewPSQ = second_best(L, MaxKey).
 
 % :- func lookup(K, psqueue(K, P)) = P is semidet.
 % lookup(Key, PSQ) = Res :-
@@ -263,3 +267,31 @@ delete_tv(DK, TV) = Res :-
     ;
         Res = tournament(T1, delete(DK, T2))
     ).
+
+tree_view(LTree) = Res :-
+    LTree = start, Res = leaf
+    ;
+    (
+      ( LTree = rloser(_, LK, LP, LL, SplitKey, LR)
+      ;
+          LTree = lloser(_, LK, LP, LL, SplitKey, LR)
+      ),
+      Res = node(LK, LP, LL, SplitKey, LR)
+    ).
+
+:- func ltree_size(ltree(K, P)) = t_ltree_size is det.
+ltree_size(LTree) = Res :-
+    LTree = start, Res = 0
+    ;
+    ( LTree = rloser(Res, _, _, _, _, _)
+    ;
+        LTree = lloser(Res, _, _, _, _, _)
+    ).
+
+% smart constructors
+
+:- func construct_leaf = ltree(K, P).
+construct_leaf = start.
+
+% :- func construct_node = ltree(K, P, ltree(K, P), K, ltree(K, P)).
+% construct_node(Key, Prio, LTree, SplitKey, RTree) = Res :-
