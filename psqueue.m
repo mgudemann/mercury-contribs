@@ -46,6 +46,8 @@
 
 :- implementation.
 
+:- import_module int.
+
 :- type psqueue(K, P) --->
     void
     ;
@@ -282,5 +284,69 @@ ltree_size(LTree) = Res :-
 :- func construct_leaf = ltree(K, P).
 construct_leaf = start.
 
-% :- func construct_node = ltree(K, P, ltree(K, P), K, ltree(K, P)).
-% construct_node(Key, Prio, LTree, SplitKey, RTree) = Res :-
+:- func construct_node(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P).
+construct_node(Key, Prio, L, SplitKey, R) = Res :-
+    Size = 1 + ltree_size(L) + ltree_size(R),
+    Res = loser(Size, Key, Prio, L, SplitKey, R).
+
+:- func balance_omega = t_ltree_size.
+:- func balance(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
+:- func balance_left(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
+:- func balance_right(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
+:- func single_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is semidet.
+:- func single_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
+:- func double_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is semidet.
+:- func double_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
+
+balance_omega = 4.
+
+balance(Key, Prio, L, SplitKey, R) = Res :-
+    SizeL = ltree_size(L),
+    SizeR = ltree_size(R),
+    ( (SizeR + SizeL) `leq` 2 ->
+        Res = construct_node(Key, Prio, L, SplitKey, R)
+    ;
+        (( compare(CMP, SizeR, balance_omega * SizeL), CMP = (>)) ->
+            Res = balance_left(Key, Prio, L, SplitKey, R)
+        ;
+            (( compare(CMP, SizeL, balance_omega * SizeR), CMP = (>)) ->
+                Res = balance_right(Key, Prio, L, SplitKey, R)
+            ;
+                Res = construct_node(Key, Prio, L, SplitKey, R)
+            )
+        )
+    ).
+
+balance_left(Key, Prio, L, SplitKey, R) = Res :-
+    TVR = tree_view(R),
+    TVR = node(_, _, RL, _, RR),
+    ( (compare(CMP, ltree_size(RL), ltree_size(RR)), CMP = (<)) ->
+        Res = single_left(Key, Prio, L, SplitKey, TVR)
+    ;
+        Res = double_left(Key, Prio, L, SplitKey, TVR)
+    ).
+
+balance_right(Key, Prio, L, SplitKey, R) = Res :-
+    TVL = tree_view(L),
+    TVL = node(_, _, LL, _, LR),
+    ( (compare(CMP, ltree_size(LR), ltree_size(LL)), CMP = (<)) ->
+        Res = single_right(Key, Prio, TVL, SplitKey, R)
+    ;
+        Res = double_right(Key, Prio, TVL, SplitKey, R)
+    ).
+
+single_left(K1, P1, L1, S1, TVR) = Res :-
+    TVR = node(K2, P2, L2, S2, R2),
+    ( ( K2 `leq` S2, P1 `leq` P2 ) ->
+        Res = construct_node(K1, P1, construct_node(K2, P2, L1, S1, L2), S2, R2)
+    ;
+        Res = construct_node(K2, P2, construct_node(K1, P1, L1, S1, L2), S2, R2)
+    ).
+
+single_right(K1, P1, TVL, S1, R) = Res :-
+    TVL = node(K2, P2, L2, S2, R2),
+    ( ( K2 `leq` S2, P1 `leq` P2 ) ->
+        Res = construct_node(K1, P1, construct_node(K2, P2, L1, S1, L2), S2, R2)
+    ;
+        Res = construct_node(K2, P2, construct_node(K1, P1, L1, S1, L2), S2, R2)
+    ).
