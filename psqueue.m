@@ -48,14 +48,16 @@
 
 :- type psqueue(K, P) --->
     void
-    ; winner(K, P, ltree(K, P), K).
+    ;
+    winner(K, P, ltree(K, P), K).
 
 :- type t_ltree_size == int.
 
 :- type ltree(K, P) --->
     start
-    ; lloser(t_ltree_size, K, P, ltree(K, P), K, ltree(K, P))
-    ; rloser(t_ltree_size, K, P, ltree(K, P), K, ltree(K, P)).
+    ;
+    loser(t_ltree_size, K, P, ltree(K, P), K, ltree(K, P)).
+
 
 % create empty psqueue
 psqueue.init = PSQ :-
@@ -98,10 +100,10 @@ tournament(PSQ1, PSQ2) = Res :-
             Size = 0,
             ( Prio1 `leq` Prio2 ->
                 % left wins
-                Res = winner(K1, Prio1, rloser(Size, K2, Prio2, L1, MaxKey1, L2), MaxKey2)
+                Res = winner(K1, Prio1, loser(Size, K2, Prio2, L1, MaxKey1, L2), MaxKey2)
             ;
                 % right wins
-                Res = winner(K2, Prio2, lloser(Size, K1, Prio1, L1, MaxKey1, L2), MaxKey2)
+                Res = winner(K2, Prio2, loser(Size, K1, Prio1, L1, MaxKey1, L2), MaxKey2)
             )
         )
     ).
@@ -111,9 +113,7 @@ second_best(LTree, Key) = Res :-
     ( LTree = start,
       Res = void
     ;
-      ( LTree = rloser(_, LK, LP, L1, SplitKey, L2)
-      ;
-        LTree = lloser(_, LK, LP, L1, SplitKey, L2)),
+      LTree = loser(_, LK, LP, L1, SplitKey, L2),
       ( LK `leq` SplitKey ->
           T1 = winner(LK, LP, L1, SplitKey),
           T2 = second_best(L2, Key),
@@ -167,10 +167,7 @@ tournament_view(PSQ) = Res :-
     (
       LTree = start, Res = singleton(K, P)
     ;
-      ( LTree = rloser(_, LK, LP, LL, SplitKey, LR)
-      ;
-          LTree = lloser(_, LK, LP, LL, SplitKey, LR)
-      ),
+      LTree = loser(_, LK, LP, LL, SplitKey, LR),
       ( LK `leq` SplitKey ->
           Res = tournament_between(winner(LK, LP, LL, SplitKey),
                                    winner(K, P, LR, MaxKey))
@@ -271,22 +268,14 @@ delete_tv(DK, TV) = Res :-
 tree_view(LTree) = Res :-
     LTree = start, Res = leaf
     ;
-    (
-      ( LTree = rloser(_, LK, LP, LL, SplitKey, LR)
-      ;
-          LTree = lloser(_, LK, LP, LL, SplitKey, LR)
-      ),
-      Res = node(LK, LP, LL, SplitKey, LR)
-    ).
+    LTree = loser(_, LK, LP, LL, SplitKey, LR),
+    Res = node(LK, LP, LL, SplitKey, LR).
 
 :- func ltree_size(ltree(K, P)) = t_ltree_size is det.
 ltree_size(LTree) = Res :-
     LTree = start, Res = 0
     ;
-    ( LTree = rloser(Res, _, _, _, _, _)
-    ;
-        LTree = lloser(Res, _, _, _, _, _)
-    ).
+    LTree = loser(Res, _, _, _, _, _).
 
 % smart constructors
 
