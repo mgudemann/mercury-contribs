@@ -14,7 +14,7 @@
 :- func max_key(psqueue(K, P)) = K is semidet.
 :- pred max_key(psqueue(K, P)::in, K::out) is semidet.
 
-:- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P).
+:- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P) is det.
 :- pred tournament(psqueue(K, P)::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
 :- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out) is semidet.
@@ -47,6 +47,7 @@
 :- implementation.
 
 :- import_module int.
+:- import_module require.
 
 :- type psqueue(K, P) --->
     void
@@ -99,13 +100,14 @@ tournament(PSQ1, PSQ2) = Res :-
             Res = PSQ1
         ;
             PSQ2 = winner(K2, Prio2, L2, MaxKey2),
-            Size = 0,
             ( Prio1 `leq` Prio2 ->
                 % left wins
-                Res = winner(K1, Prio1, loser(Size, K2, Prio2, L1, MaxKey1, L2), MaxKey2)
+                Res = winner(K1, Prio1,
+                             balance(K2, Prio2, L1, MaxKey1, L2), MaxKey2)
             ;
                 % right wins
-                Res = winner(K2, Prio2, loser(Size, K1, Prio1, L1, MaxKey1, L2), MaxKey2)
+                Res = winner(K2, Prio2,
+                             balance(K1, Prio1, L1, MaxKey1, L2), MaxKey2)
             )
         )
     ).
@@ -130,25 +132,6 @@ second_best(LTree, Key) = Res :-
 del_min(PSQ, MinKey, MinPrio, NewPSQ) :-
     PSQ = winner(MinKey, MinPrio, L, MaxKey),
     NewPSQ = second_best(L, MaxKey).
-
-% :- func lookup(K, psqueue(K, P)) = P is semidet.
-% lookup(Key, PSQ) = Res :-
-%     PSQ = winner(WKey, Prio, LTree, MaxKey),
-%     ( LTree = start,
-%         compare(CMP, Key, WKey),
-%         CMP = (=),
-%         Res = Prio
-%     ;
-%         ( LTree = lloser(_, _, _, LL, _, LR)
-%         ;
-%             LTree = rloser(_, _, _, LL, _, LR)),
-%         compare(CMP, MaxKey, Key),
-%         ( CMP = (<) ->
-%             Res = lookup(Key, LR)
-%         ;
-%             Res = lookup(Key, LL)
-%         )
-%     ).
 
 % less or equal
 % is true if ValLeft =< ValRight
@@ -290,13 +273,13 @@ construct_node(Key, Prio, L, SplitKey, R) = Res :-
     Res = loser(Size, Key, Prio, L, SplitKey, R).
 
 :- func balance_omega = t_ltree_size.
-:- func balance(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
-:- func balance_left(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
-:- func balance_right(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
-:- func single_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is semidet.
-:- func single_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
-:- func double_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is semidet.
-:- func double_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is semidet.
+:- func balance(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
+:- func balance_left(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
+:- func balance_right(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
+:- func single_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is det.
+:- func single_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is det.
+:- func double_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is det.
+:- func double_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is det.
 
 balance_omega = 4.
 
@@ -319,47 +302,65 @@ balance(Key, Prio, L, SplitKey, R) = Res :-
 
 balance_left(Key, Prio, L, SplitKey, R) = Res :-
     TVR = tree_view(R),
-    TVR = node(_, _, RL, _, RR),
-    ( (compare(CMP, ltree_size(RL), ltree_size(RR)), CMP = (<)) ->
-        Res = single_left(Key, Prio, L, SplitKey, TVR)
+    ( TVR = node(_, _, RL, _, RR) ->
+        ( (compare(CMP, ltree_size(RL), ltree_size(RR)), CMP = (<)) ->
+            Res = single_left(Key, Prio, L, SplitKey, TVR)
+        ;
+            Res = double_left(Key, Prio, L, SplitKey, TVR)
+        )
     ;
-        Res = double_left(Key, Prio, L, SplitKey, TVR)
+        unexpected($file, $pred, "error in left balance")
     ).
 
 balance_right(Key, Prio, L, SplitKey, R) = Res :-
     TVL = tree_view(L),
-    TVL = node(_, _, LL, _, LR),
-    ( (compare(CMP, ltree_size(LR), ltree_size(LL)), CMP = (<)) ->
-        Res = single_right(Key, Prio, TVL, SplitKey, R)
+    ( TVL = node(_, _, LL, _, LR) ->
+        ( (compare(CMP, ltree_size(LR), ltree_size(LL)), CMP = (<)) ->
+            Res = single_right(Key, Prio, TVL, SplitKey, R)
+        ;
+            Res = double_right(Key, Prio, TVL, SplitKey, R)
+        )
     ;
-        Res = double_right(Key, Prio, TVL, SplitKey, R)
+        unexpected($file, $pred, "error in right balance")
     ).
 
 single_left(K1, P1, T1, S1, TVR) = Res :-
-    TVR = node(K2, P2, T2, S2, T3),
-    ( ( K2 `leq` S2, P1 `leq` P2 ) ->
-        Res = construct_node(K1, P1, construct_node(K2, P2, T1, S1, T2), S2, T3)
+    ( TVR = node(K2, P2, T2, S2, T3) ->
+        ( ( K2 `leq` S2, P1 `leq` P2 ) ->
+            Res = construct_node(K1, P1, construct_node(K2, P2, T1, S1, T2), S2, T3)
+        ;
+            Res = construct_node(K2, P2, construct_node(K1, P1, T1, S1, T2), S2, T3)
+        )
     ;
-        Res = construct_node(K2, P2, construct_node(K1, P1, T1, S1, T2), S2, T3)
+        unexpected($file, $pred, "error in single left rotation")
     ).
 
 single_right(K1, P1, TVL, S2, T3) = Res :-
-    TVL = node(K2, P2, T1, S1, T2),
-    ( ( compare(CMP0, K2, S1), CMP0 = (>), P1 `leq` P2 ) ->
-        Res = construct_node(K1, P1, T1, S1, construct_node(K2, P2, T2, S2, T3))
+    ( TVL = node(K2, P2, T1, S1, T2) ->
+        ( ( compare(CMP0, K2, S1), CMP0 = (>), P1 `leq` P2 ) ->
+            Res = construct_node(K1, P1, T1, S1, construct_node(K2, P2, T2, S2, T3))
+        ;
+            Res = construct_node(K2, P2, T1, S1, construct_node(K1, P1, T2, S1, T3))
+        )
     ;
-        Res = construct_node(K2, P2, T1, S1, construct_node(K1, P1, T2, S1, T3))
+        unexpected($file, $pred, "error in single right rotation")
     ).
 
 double_left(K1, P1, T1, S1, TVR) = Res :-
-    TVR = node(K2, P2, T2, S2, T3),
-    Res = single_left(K1, P1, T1, S1,
-                      tree_view(single_right(K2, P2,
-                                             tree_view(T2), S2, T3))).
+    ( TVR = node(K2, P2, T2, S2, T3) ->
+        Res = single_left(K1, P1, T1, S1,
+                          tree_view(single_right(K2, P2,
+                                                 tree_view(T2), S2, T3)))
+    ;
+        unexpected($file, $pred, "error in doulbe left rotation")
+    ).
 
 double_right(K1, P1, TVL, S2, T3) = Res :-
-    TVL = node(K2, P2, T1, S1, T2),
-    Res = single_right(K1, P1,
-                       tree_view(single_left(K2, P2, T1, S1,
-                                             tree_view(T2))),
-                       S2, T3).
+    ( TVL = node(K2, P2, T1, S1, T2) ->
+        Res = single_right(K1, P1,
+                           tree_view(single_left(K2, P2, T1, S1,
+                                                 tree_view(T2))),
+                           S2, T3)
+    ;
+        unexpected($file, $pred, "error in double right rotation")
+    ).
