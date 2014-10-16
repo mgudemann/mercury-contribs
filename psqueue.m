@@ -335,20 +335,20 @@ balance_right(Key, Prio, L, SplitKey, R) = Res :-
         Res = double_right(Key, Prio, TVL, SplitKey, R)
     ).
 
-single_left(K1, P1, L1, S1, TVR) = Res :-
-    TVR = node(K2, P2, L2, S2, R2),
+single_left(K1, P1, T1, S1, TVR) = Res :-
+    TVR = node(K2, P2, T2, S2, T3),
     ( ( K2 `leq` S2, P1 `leq` P2 ) ->
-        Res = construct_node(K1, P1, construct_node(K2, P2, L1, S1, L2), S2, R2)
+        Res = construct_node(K1, P1, construct_node(K2, P2, T1, S1, T2), S2, T3)
     ;
-        Res = construct_node(K2, P2, construct_node(K1, P1, L1, S1, L2), S2, R2)
+        Res = construct_node(K2, P2, construct_node(K1, P1, T1, S1, T2), S2, T3)
     ).
 
-single_right(K1, P1, TVL, S2, R2) = Res :-
-    TVL = node(K2, P2, L1, S1, R1),
+single_right(K1, P1, TVL, S2, T3) = Res :-
+    TVL = node(K2, P2, T1, S1, T2),
     ( ( compare(CMP0, K2, S1), CMP0 = (>), P1 `leq` P2 ) ->
-        Res = construct_node(K1, P1, L1, S1, construct_node(K2, P2, R1, S2, R2))
+        Res = construct_node(K1, P1, T1, S1, construct_node(K2, P2, T2, S2, T3))
     ;
-        Res = construct_node(K2, P2, L1, S1, construct_node(K1, P1, R1, S1, R2))
+        Res = construct_node(K2, P2, T1, S1, construct_node(K1, P1, T2, S1, T3))
     ).
 
 double_left(K1, P1, T1, S1, TVR) = Res :-
