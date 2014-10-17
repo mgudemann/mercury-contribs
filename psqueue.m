@@ -21,6 +21,7 @@
 
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- func det_insert(K, P, psqueue(K, P)) = psqueue(K, P) is det.
 :- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func lookup(K, psqueue(K, P)) = P is semidet.
 
@@ -201,6 +202,13 @@ adjust_tv(Func, K, TV) = Res :-
     ).
 
 insert(IK, IP, PSQ) = insert_tv(IK, IP, tournament_view(PSQ)).
+
+det_insert(IK, IP, PSQ) = Res :-
+	( Res0 = insert_tv(IK, IP, tournament_view(PSQ)) ->
+	  Res = Res0
+	;
+	  unexpected($file, $pred, "error in deterministic insert")
+	).
 
 :- func insert_tv(K, P, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
 insert_tv(IK, IP, TV) = Res :-
