@@ -8,9 +8,6 @@
 
 :- pred is_empty(psqueue(K, P)::in) is semidet.
 
-:- pred singleton(K::in, P::in, psqueue(K, P)::out) is det.
-:- func singleton(K, P) = psqueue(K, P).
-
 :- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out) is semidet.
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
@@ -49,6 +46,9 @@ psqueue.init(void).
 % check for empty psqueue
 psqueue.is_empty(void).
 
+
+:- pred singleton(K::in, P::in, psqueue(K, P)::out) is det.
+:- func singleton(K, P) = psqueue(K, P).
 
 % create singleton psqueue
 singleton(K, P) = Res :-
