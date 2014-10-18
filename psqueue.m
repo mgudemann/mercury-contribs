@@ -204,15 +204,15 @@ adjust_tv(Func, K, TV) = Res :-
 insert(IK, IP, PSQ) = insert_tv(IK, IP, tournament_view(PSQ)).
 
 det_insert(IK, IP, PSQ) = Res :-
-	( Res0 = insert_tv(IK, IP, tournament_view(PSQ)) ->
-	  Res = Res0
-	;
-	  unexpected($file, $pred, "error in deterministic insert")
-	).
+        ( Res0 = insert_tv(IK, IP, tournament_view(PSQ)) ->
+          Res = Res0
+        ;
+          unexpected($file, $pred, "error in deterministic insert")
+        ).
 
 :- func insert_tv(K, P, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
 insert_tv(IK, IP, TV) = Res :-
-    TV = emptySet, Res = void
+    TV = emptySet, Res = psqueue.singleton(IK, IP)
     ;
     TV = singleton(Key, Prio),
     compare(CMP, IK, Key),
