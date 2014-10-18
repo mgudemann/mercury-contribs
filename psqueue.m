@@ -293,7 +293,6 @@ ltree_size(LTree) = Res :-
     LTree = loser(Res, _, _, _, _, _).
 
 % smart constructors
-
 :- func construct_leaf = ltree(K, P).
 construct_leaf = start.
 
@@ -302,7 +301,12 @@ construct_node(Key, Prio, L, SplitKey, R) = Res :-
     Size = 1 + ltree_size(L) + ltree_size(R),
     Res = loser(Size, Key, Prio, L, SplitKey, R).
 
+
+% balancing factor
 :- func balance_omega = t_ltree_size.
+
+balance_omega = 4.
+
 :- func balance(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
 :- func balance_left(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
 :- func balance_right(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
@@ -310,8 +314,6 @@ construct_node(Key, Prio, L, SplitKey, R) = Res :-
 :- func single_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is det.
 :- func double_left(K, P, ltree(K, P), K, t_tree_view(K, P)) = ltree(K, P) is det.
 :- func double_right(K, P, t_tree_view(K, P), K, ltree(K, P)) = ltree(K, P) is det.
-
-balance_omega = 4.
 
 balance(Key, Prio, L, SplitKey, R) = Res :-
     SizeL = ltree_size(L),
