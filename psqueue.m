@@ -18,6 +18,9 @@
 :- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func lookup(K, psqueue(K, P)) = P is semidet.
 
+:- func size(psqueue(K, P)) = int is det.
+:- pred size(psqueue(K, P)::in, int::out) is det.
+
 
 :- implementation.
 
@@ -273,6 +276,15 @@ delete_tv(DK, TV) = Res :-
     ;
         Res = tournament(T1, delete(DK, T2))
     ).
+
+size(PSQ, Size) :-
+    PSQ = void, Size = 0
+    ;
+    PSQ = winner(_, _, LTree, _),
+    Size = ltree_size(LTree).
+
+size(PSQ) = Res :-
+    size(PSQ, Res).
 
 :- func ltree_size(ltree(K, P)) = t_ltree_size is det.
 ltree_size(LTree) = Res :-
