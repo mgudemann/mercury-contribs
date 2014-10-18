@@ -11,39 +11,13 @@
 :- pred singleton(K::in, P::in, psqueue(K, P)::out) is det.
 :- func singleton(K, P) = psqueue(K, P).
 
-:- func max_key(psqueue(K, P)) = K is semidet.
-:- pred max_key(psqueue(K, P)::in, K::out) is semidet.
-
-:- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P) is det.
-:- pred tournament(psqueue(K, P)::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
-
 :- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out) is semidet.
-
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func det_insert(K, P, psqueue(K, P)) = psqueue(K, P) is det.
 :- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- func lookup(K, psqueue(K, P)) = P is semidet.
 
-
-:- pred leq(V::in, V::in) is semidet.
-
-:- func min_view(psqueue(K, P)) = t_min_view(K, P) is det.
-:- func tournament_view(psqueue(K, P)) = t_tournament_view(K, P) is det.
-:- func tree_view(ltree(K, P)) = t_tree_view(K, P) is det.
-
-:- type t_min_view(K, P) --->
-    emtpy
-    ; min(K, P, psqueue(K, P)).
-
-:- type t_tournament_view(K, P) --->
-    emptySet
-    ; singleton(K, P)
-    ; tournament_between(psqueue(K, P), psqueue(K, P)).
-
-:- type t_tree_view(K, P) --->
-    leaf
-    ; node(K, P, ltree(K, P), K, ltree(K, P)).
 
 :- implementation.
 
@@ -69,7 +43,6 @@ psqueue.init = PSQ :-
 
 psqueue.init(void).
 
-
 % check for empty psqueue
 psqueue.is_empty(void).
 
@@ -81,6 +54,10 @@ singleton(K, P) = Res :-
 singleton(K, P, PSQ) :-
     PSQ = winner(K, P, start, K).
 
+
+:- func max_key(psqueue(K, P)) = K is semidet.
+:- pred max_key(psqueue(K, P)::in, K::out) is semidet.
+
 % extract maximal (highest priority) key
 max_key(PSQ) = K :-
         max_key(PSQ, K).
@@ -88,6 +65,9 @@ max_key(PSQ) = K :-
 max_key(PSQ, MaxKey) :-
         PSQ = winner(_, _, _, MaxKey).
 
+
+:- func tournament(psqueue(K, P), psqueue(K, P)) = psqueue(K, P) is det.
+:- pred tournament(psqueue(K, P)::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
 tournament(PSQ0, PSQ1, PSQ) :-
     PSQ = tournament(PSQ0, PSQ1).
@@ -113,6 +93,7 @@ tournament(PSQ1, PSQ2) = Res :-
         )
     ).
 
+
 :- func second_best(ltree(K, P), K) = psqueue(K, P) is det.
 second_best(LTree, Key) = Res :-
     ( LTree = start,
@@ -134,17 +115,42 @@ del_min(PSQ, MinKey, MinPrio, NewPSQ) :-
     PSQ = winner(MinKey, MinPrio, L, MaxKey),
     NewPSQ = second_best(L, MaxKey).
 
+
+:- pred leq(V::in, V::in) is semidet.
+
 % less or equal
 % is true if ValLeft =< ValRight
 leq(ValLeft, ValRight) :-
     compare(CMP, ValLeft, ValRight),
     ( CMP = (>) -> fail; true).
 
+
+:- type t_min_view(K, P) --->
+    emtpy
+    ;
+    min(K, P, psqueue(K, P)).
+
+:- type t_tournament_view(K, P) --->
+    emptySet
+    ;
+    singleton(K, P)
+    ;
+    tournament_between(psqueue(K, P), psqueue(K, P)).
+
+:- type t_tree_view(K, P) --->
+    leaf
+    ;
+    node(K, P, ltree(K, P), K, ltree(K, P)).
+
+:- func min_view(psqueue(K, P)) = t_min_view(K, P) is det.
+
 min_view(PSQ) = Res :-
     PSQ = void, Res = emtpy
     ;
     PSQ = winner(Key, Prio, LTree, MaxKey),
     Res = min(Key, Prio, second_best(LTree, MaxKey)).
+
+:- func tournament_view(psqueue(K, P)) = t_tournament_view(K, P) is det.
 
 tournament_view(PSQ) = Res :-
     PSQ = void, Res = emptySet
@@ -162,6 +168,16 @@ tournament_view(PSQ) = Res :-
                                    winner(LK, LP, LR, MaxKey))
       )
     ).
+
+
+:- func tree_view(ltree(K, P)) = t_tree_view(K, P) is det.
+
+tree_view(LTree) = Res :-
+    LTree = start, Res = leaf
+    ;
+    LTree = loser(_, LK, LP, LL, SplitKey, LR),
+    Res = node(LK, LP, LL, SplitKey, LR).
+
 
 lookup(K, PSQ) = lookup_tv(K, tournament_view(PSQ)).
 
@@ -257,12 +273,6 @@ delete_tv(DK, TV) = Res :-
     ;
         Res = tournament(T1, delete(DK, T2))
     ).
-
-tree_view(LTree) = Res :-
-    LTree = start, Res = leaf
-    ;
-    LTree = loser(_, LK, LP, LL, SplitKey, LR),
-    Res = node(LK, LP, LL, SplitKey, LR).
 
 :- func ltree_size(ltree(K, P)) = t_ltree_size is det.
 ltree_size(LTree) = Res :-
