@@ -32,6 +32,8 @@
 :- module psqueue.
 :- interface.
 
+:- import_module assoc_list.
+
 %---------------------------------------------------------------------------%
 
 :- type psqueue(K, P).
@@ -49,6 +51,9 @@
     %
 :- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out)
     is semidet.
+
+:- func to_ord_assoc_list(psqueue(K, P)) = assoc_list(K, P).
+:- pred to_ord_assoc_list(psqueue(K, P)::in, assoc_list(K, P)::out) is det.
 
     % remove element with specific key from priority queue
     %
@@ -96,6 +101,8 @@
 :- implementation.
 
 :- import_module int.
+:- import_module list.
+:- import_module pair.
 :- import_module require.
 
 %---------------------------------------------------------------------------%
@@ -198,6 +205,17 @@ second_best(LTree, Key) = Res :-
           T2 = winner(LK, LP, U, Key),
           Res = tournament(T1, T2)
       )
+    ).
+
+to_ord_assoc_list(PSQ) = Res :-
+    to_ord_assoc_list(PSQ, Res).
+
+to_ord_assoc_list(PSQ, AList) :-
+    ( psqueue.del_min(PSQ, K, P, PSQ0) ->
+        to_ord_assoc_list(PSQ0, AList0),
+        AList = [K - P | AList0]
+    ;
+        AList = []
     ).
 
 del_min(PSQ, MinKey, MinPrio, NewPSQ) :-
