@@ -18,6 +18,7 @@
 :- func size(psqueue(K, P)) = int is det.
 :- pred size(psqueue(K, P)::in, int::out) is det.
 
+:- pred is_semi_heap(psqueue(K, P)::in) is semidet.
 
 :- implementation.
 
@@ -389,3 +390,21 @@ double_right(K1, P1, TVL, S2, T3) = Res :-
     ;
         unexpected($file, $pred, "error in double right rotation")
     ).
+
+
+%%% test predicates for correct implementation of psqueue
+
+is_semi_heap(PSQ) :-
+    PSQ = void
+    ;
+    PSQ = winner(_, Prio, LTree, _),
+    all_keys_larger_ltree(Prio, LTree).
+
+:- pred all_keys_larger_ltree(P::in, ltree(K, P)::in) is semidet.
+all_keys_larger_ltree(Prio, LTree) :-
+    LTree = start
+    ;
+    LTree = loser(_, _, LP, LT, _, RT),
+    Prio `leq` LP,
+    all_keys_larger_ltree(Prio, LT),
+    all_keys_larger_ltree(Prio, RT).
