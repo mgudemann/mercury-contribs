@@ -18,6 +18,7 @@
 :- func size(psqueue(K, P)) = int is det.
 :- pred size(psqueue(K, P)::in, int::out) is det.
 
+:- pred is_semi_heap(psqueue(K, P)::in) is semidet.
 
 :- implementation.
 
@@ -86,12 +87,10 @@ tournament(PSQ1, PSQ2) = Res :-
             PSQ2 = winner(K2, Prio2, L2, MaxKey2),
             ( Prio1 `leq` Prio2 ->
                 % left wins
-                Res = winner(K1, Prio1,
-                             balance(K2, Prio2, L1, MaxKey1, L2), MaxKey2)
+                Res = winner(K1, Prio1, balance(K2, Prio2, L1, MaxKey1, L2), MaxKey2)
             ;
                 % right wins
-                Res = winner(K2, Prio2,
-                             balance(K1, Prio1, L1, MaxKey1, L2), MaxKey2)
+                Res = winner(K2, Prio2, balance(K1, Prio1, L1, MaxKey1, L2), MaxKey2)
             )
         )
     ).
@@ -102,14 +101,14 @@ second_best(LTree, Key) = Res :-
     ( LTree = start,
       Res = void
     ;
-      LTree = loser(_, LK, LP, L1, SplitKey, L2),
+      LTree = loser(_, LK, LP, T, SplitKey, U),
       ( LK `leq` SplitKey ->
-          T1 = winner(LK, LP, L1, SplitKey),
-          T2 = second_best(L2, Key),
+          T1 = winner(LK, LP, T, SplitKey),
+          T2 = second_best(U, Key),
           Res = tournament(T1, T2)
       ;
-          T1 = second_best(L1, SplitKey),
-          T2 = winner(LK, LP, L2, Key),
+          T1 = second_best(T, SplitKey),
+          T2 = winner(LK, LP, U, Key),
           Res = tournament(T1, T2)
       )
     ).
@@ -235,16 +234,11 @@ insert_tv(IK, IP, TV) = Res :-
     ;
     TV = singleton(Key, Prio),
     compare(CMP, IK, Key),
-    ( CMP = (<),
-        Res = tournament(psqueue.singleton(Key, Prio),
-                         psqueue.singleton(IK, IP))
+    ( CMP = (<), Res = tournament(psqueue.singleton(IK, IP), psqueue.singleton(Key, Prio))
     ;
-        CMP = (=),
-        Res = psqueue.singleton(IK, IP)
+      CMP = (=), Res = psqueue.singleton(IK, IP)
     ;
-        CMP = (>),
-        Res = tournament(psqueue.singleton(IK, IP),
-                         psqueue.singleton(Key, Prio))
+      CMP = (>), Res = tournament(psqueue.singleton(Key, Prio), psqueue.singleton(IK, IP))
     )
     ;
     TV = tournament_between(T1, T2),
@@ -396,3 +390,20 @@ double_right(K1, P1, TVL, S2, T3) = Res :-
     ;
         unexpected($file, $pred, "error in double right rotation")
     ).
+
+%%% test predicates for correct implementation of psqueue
+
+is_semi_heap(PSQ) :-
+    PSQ = void
+    ;
+    PSQ = winner(_, Prio, LTree, _),
+    all_keys_larger_ltree(Prio, LTree).
+
+:- pred all_keys_larger_ltree(P::in, ltree(K, P)::in) is semidet.
+all_keys_larger_ltree(Prio, LTree) :-
+    LTree = start
+    ;
+    LTree = loser(_, _, LP, LT, _, RT),
+    Prio `leq` LP,
+    all_keys_larger_ltree(Prio, LT),
+    all_keys_larger_ltree(Prio, RT).
