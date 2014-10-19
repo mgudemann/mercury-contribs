@@ -161,13 +161,13 @@ tournament_view(PSQ) = Res :-
     (
       LTree = start, Res = singleton(K, P)
     ;
-      LTree = loser(_, LK, LP, LL, SplitKey, LR),
+      LTree = loser(_, LK, LP, TL, SplitKey, TR),
       ( LK `leq` SplitKey ->
-          Res = tournament_between(winner(LK, LP, LL, SplitKey),
-                                   winner(K, P, LR, MaxKey))
+          Res = tournament_between(winner(LK, LP, TL, SplitKey),
+                                   winner(K, P, TR, MaxKey))
       ;
-          Res = tournament_between(winner(K, P, LL, SplitKey),
-                                   winner(LK, LP, LR, MaxKey))
+          Res = tournament_between(winner(K, P, TL, SplitKey),
+                                   winner(LK, LP, TR, MaxKey))
       )
     ).
 
@@ -189,12 +189,12 @@ lookup_tv(K, TV) = Res :-
     Key = K,
     Res = Prio
     ;
-    TV = tournament_between(W1, W2),
-    W1 = winner(_, _, _, MaxKey1),
+    TV = tournament_between(TL, TR),
+    TL = winner(_, _, _, MaxKey1),
     ( K `leq` MaxKey1 ->
-        Res = lookup(K, W1)
+        Res = lookup(K, TL)
     ;
-        Res = lookup(K, W2)
+        Res = lookup(K, TR)
     ).
 
 
@@ -211,12 +211,12 @@ adjust_tv(Func, K, TV) = Res :-
         Res = psqueue.singleton(Key, Prio)
     )
     ;
-    TV = tournament_between(T1, T2),
-    T1 = winner(_, _, _, MaxKey1),
+    TV = tournament_between(TL, TR),
+    TL = winner(_, _, _, MaxKey1),
     ( K `leq` MaxKey1 ->
-        Res = tournament(adjust(Func, K, T1), T2)
+        Res = tournament(adjust(Func, K, TL), TR)
     ;
-        Res = tournament(T1, adjust(Func, K, T2))
+        Res = tournament(TL, adjust(Func, K, TR))
     ).
 
 insert(IK, IP, PSQ) = insert_tv(IK, IP, tournament_view(PSQ)).
@@ -263,12 +263,12 @@ delete_tv(DK, TV) = Res :-
         Res = psqueue.singleton(Key, Prio)
     )
     ;
-    TV = tournament_between(T1, T2),
-    T1 = winner(_, _, _, MaxKey1),
+    TV = tournament_between(TL, TR),
+    TL = winner(_, _, _, MaxKey1),
     ( DK `leq` MaxKey1 ->
-        Res = tournament(delete(DK, T1), T2)
+        Res = tournament(delete(DK, TL), TR)
     ;
-        Res = tournament(T1, delete(DK, T2))
+        Res = tournament(TL, delete(DK, TR))
     ).
 
 size(PSQ, Size) :-
@@ -312,7 +312,7 @@ balance_omega = 4.
 balance(Key, Prio, L, SplitKey, R) = Res :-
     SizeL = ltree_size(L),
     SizeR = ltree_size(R),
-    ( (SizeR + SizeL) `leq` 2 ->
+    ( (SizeR + SizeL) < 2 ->
         Res = construct_node(Key, Prio, L, SplitKey, R)
     ;
         (( compare(CMP, SizeR, balance_omega * SizeL), CMP = (>)) ->
@@ -366,7 +366,7 @@ single_right(K1, P1, TVL, S2, T3) = Res :-
         ( ( compare(CMP0, K2, S1), CMP0 = (>), P1 `leq` P2 ) ->
             Res = construct_node(K1, P1, T1, S1, construct_node(K2, P2, T2, S2, T3))
         ;
-            Res = construct_node(K2, P2, T1, S1, construct_node(K1, P1, T2, S1, T3))
+            Res = construct_node(K2, P2, T1, S1, construct_node(K1, P1, T2, S2, T3))
         )
     ;
         unexpected($file, $pred, "error in single right rotation")
