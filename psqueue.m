@@ -9,11 +9,11 @@
 % This module implements a priority search queue ADT.
 %
 % A psqueue is a priority search queue. A priority search queue holds a
-% collection of key-value pairs together with a priority; the interface
-% provides operations to create an empty priority queue, to insert a key-value
-% pair with a priority into a priority queue, to remove the element with the
-% lowest key, to look up a key-value pair and its priority and to adjust the
-% priority of a key-value pair.
+% collection of keys together with a priority; the interface provides
+% operations to create an empty priority queue, to insert a key with an
+% associated priority into a priority queue, to remove the element with the
+% highest priority, to look up a key and its priority and to adjust the
+% priority of a key.
 %
 % The implementation here follows closely the description given in Ralf Hinze's
 % paper "A Simple Implementation Technique for Priority Search Queues", ICFP
@@ -52,29 +52,65 @@
 :- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out)
     is semidet.
 
+    % peek at highest priority key
+    %
+:- pred peek(psqueue(K, P)::in, K::out, P::out) is semidet.
+
+    % as peek/3, will call error/1 if the psqueue is empty
+    %
+:- pred det_peek(psqueue(K, P)::in, K::out, P::out) is det.
+
+    % create an ordered association list from priority search queue
+    %
 :- func to_ord_assoc_list(psqueue(K, P)) = assoc_list(K, P).
 :- pred to_ord_assoc_list(psqueue(K, P)::in, assoc_list(K, P)::out) is det.
 
     % remove element with specific key from priority queue
     %
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- pred delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is semidet.
+
+    % remove element with specific key from priority queue, call error/1 if
+    % element is not present
+    %
+:- func det_delete(K, psqueue(K, P)) = psqueue(K, P) is det.
+:- pred det_delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
     % insert key with specified priority into priority search queue
     %
 :- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- pred insert(K::in, P::in, psqueue(K, P)::in, psqueue(K, P)::out) is semidet.
 
     % As above, will call error/1 if the key is already present
     %
 :- func det_insert(K, P, psqueue(K, P)) = psqueue(K, P) is det.
+:- pred det_insert(K::in, P::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
     % adjust priority of specified element. The old priority is given as an
     % argument to the adjustment function
     %
 :- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
+:- pred adjust((func(P) = P)::in, K::in, psqueue(K, P)::in, psqueue(K, P)::in)
+    is semidet.
+
+   % adjust priority of specified element. The old priority is given as an
+    % argument to the adjustment function, call error/1 if element is not
+    % present
+    %
+:- func det_adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is det.
+:- pred det_adjust((func(P) = P)::in, K::in, psqueue(K, P)::in,
+                  psqueue(K, P)::out) is det.
 
     % lookup the priority of the specified element
     %
 :- func lookup(K, psqueue(K, P)) = P is semidet.
+:- pred lookup(K::in, psqueue(K, P)::in, P::out) is semidet.
+
+    % lookup the priority of the specified element, call error/1 if element is
+    % not present
+    %
+:- func det_lookup(K, psqueue(K, P)) = P is det.
+:- pred det_lookup(K::in, psqueue(K, P)::in, P::out) is det.
 
     % return the size of the priority search queue as the number of elements
     %
@@ -222,6 +258,16 @@ del_min(PSQ, MinKey, MinPrio, NewPSQ) :-
     PSQ = winner(MinKey, MinPrio, L, MaxKey),
     NewPSQ = second_best(L, MaxKey).
 
+peek(PSQ, MinKey, MinPrio) :-
+    PSQ = winner(MinKey, MinPrio, _, _).
+
+det_peek(PSQ, MinKey, MinPrio) :-
+    ( peek(PSQ, MinKey0, MinPrio0) ->
+        MinKey = MinKey0,
+        MinPrio = MinPrio0
+    ;
+        unexpected($file, $pred, "priority search queue is empty")
+    ).
 
 :- pred leq(V::in, V::in) is semidet.
 :- pragma type_spec(leq/2, V = int).
@@ -268,19 +314,22 @@ min_view(PSQ) = Res :-
 :- func tournament_view(psqueue(K, P)) = t_tournament_view(K, P) is det.
 
 tournament_view(PSQ) = Res :-
-    PSQ = void, Res = emptySet
-    ;
-    PSQ = winner(K, P, LTree, MaxKey),
     (
-      LTree = start, Res = singleton(K, P)
+      PSQ = void,
+      Res = emptySet
     ;
-      LTree = loser(_, LK, LP, TL, SplitKey, TR),
-      ( LK `leq` SplitKey ->
-          Res = tournament_between(winner(LK, LP, TL, SplitKey),
-                                   winner(K, P, TR, MaxKey))
+      PSQ = winner(K, P, LTree, MaxKey),
+      (
+        LTree = start, Res = singleton(K, P)
       ;
-          Res = tournament_between(winner(K, P, TL, SplitKey),
-                                   winner(LK, LP, TR, MaxKey))
+        LTree = loser(_, LK, LP, TL, SplitKey, TR),
+        ( LK `leq` SplitKey ->
+            Res = tournament_between(winner(LK, LP, TL, SplitKey),
+                                     winner(K, P, TR, MaxKey))
+        ;
+            Res = tournament_between(winner(K, P, TL, SplitKey),
+                                     winner(LK, LP, TR, MaxKey))
+        )
       )
     ).
 
@@ -300,6 +349,20 @@ tree_view(LTree) = Res :-
 
 lookup(K, PSQ) = lookup_tv(K, tournament_view(PSQ)).
 
+lookup(K, PSQ, P) :-
+    P = lookup(K, PSQ).
+
+det_lookup(K, PSQ) = Res :-
+    ( Res0 = lookup(K, PSQ) ->
+        Res = Res0
+    ;
+        unexpected($file, $pred, "element to look-up is not present in\
+                  priority search queue")
+    ).
+
+det_lookup(K, PSQ, P) :-
+    P = det_lookup(K, PSQ).
+
 :- func lookup_tv(K, t_tournament_view(K, P)) = P is semidet.
 lookup_tv(K, TV) = Res :-
     (
@@ -318,6 +381,20 @@ lookup_tv(K, TV) = Res :-
 
 
 adjust(F, K, PSQ) = adjust_tv(F, K, tournament_view(PSQ)).
+
+adjust(F, K, PSQ, PSQ0) :-
+    PSQ0 = adjust(F, K, PSQ).
+
+det_adjust(F, K, PSQ) = Res :-
+    ( PSQ0 = adjust(F, K, PSQ) ->
+        Res = PSQ0
+    ;
+        unexpected($file, $pred, "element to adjust not present in priority\
+                  search queue")
+    ).
+
+det_adjust(F, K, PSQ, PSQ0) :-
+    PSQ0 = det_adjust(F, K, PSQ).
 
 :- func adjust_tv(func(P) = P, K, t_tournament_view(K, P)) = psqueue(K, P)
     is semidet.
@@ -343,12 +420,18 @@ adjust_tv(Func, K, TV) = Res :-
 
 insert(IK, IP, PSQ) = insert_tv(IK, IP, tournament_view(PSQ)).
 
+insert(IK, IP, PSQ, PSQ0) :-
+    PSQ0 = insert(IK, IP, PSQ).
+
 det_insert(IK, IP, PSQ) = Res :-
         ( Res0 = insert_tv(IK, IP, tournament_view(PSQ)) ->
             Res = Res0
         ;
             unexpected($file, $pred, "error in deterministic insert")
         ).
+
+det_insert(IK, IP, PSQ, PSQ0) :-
+    PSQ0 = det_insert(IK, IP, PSQ).
 
 :- func insert_tv(K, P, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
 insert_tv(IK, IP, TV) = Res :-
@@ -378,6 +461,19 @@ insert_tv(IK, IP, TV) = Res :-
     ).
 
 delete(DK, PSQ) = delete_tv(DK, tournament_view(PSQ)).
+
+delete(DK, PSQ, PSQ0) :-
+    PSQ0 = delete(DK, PSQ).
+
+det_delete(DK, PSQ) = Res :-
+    ( PSQ0 = delete(DK, PSQ) ->
+        Res = PSQ0
+    ;
+        unexpected($file, $pred, "element not in priority search queue")
+    ).
+
+det_delete(DK, PSQ, PSQ0) :-
+    PSQ0 = det_delete(DK, PSQ).
 
 :- func delete_tv(K, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
 delete_tv(DK, TV) = Res :-
