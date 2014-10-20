@@ -131,6 +131,8 @@
     %
 :- pred is_search_tree(psqueue(K, P)::in) is semidet.
 
+:- pred is_balanced_tree(psqueue(K, P)::in) is semidet.
+
 %---------------------------------------------------------------------------%
 %---------------------------------------------------------------------------%
 
@@ -155,13 +157,15 @@
 
 %---------------------------------------------------------------------------%
 
-% create empty psqueue
+    % create empty psqueue
+    %
 psqueue.init = PSQ :-
         psqueue.init(PSQ).
 
 psqueue.init(void).
 
-% check for empty psqueue
+    % check for empty psqueue
+    %
 psqueue.is_empty(void).
 
 
@@ -774,6 +778,40 @@ max_key_loser_tree(LTree, CurrMax, MaxKey) :-
     ),
     ( MaxKey2 `leq` MaxKey1 ->
         MaxKey = MaxKey2; MaxKey = MaxKey1).
+
+is_balanced_tree(PSQ) :-
+    (
+      PSQ = void
+    ;
+      PSQ = winner(_, _, T, _),
+      all_nodes_balanced(T)
+    ).
+
+    % verify that all nodes have balanced child trees
+    %
+:- pred all_nodes_balanced(ltree(K, P)::in) is semidet.
+all_nodes_balanced(LTree) :-
+    (
+      LTree = start
+    ;
+      LTree = loser(_, _, _, TL, _, TR),
+      LHeight = ltree_height(TL),
+      RHeight = ltree_height(TR),
+      HDiff = int.abs(LHeight - RHeight),
+      HDiff =< balance_omega * int.max(LHeight, RHeight),
+      all_nodes_balanced(TL),
+      all_nodes_balanced(TR)
+    ).
+
+:- func ltree_height(ltree(K, P)) = int is det.
+ltree_height(LTree) = Res :-
+    (
+      LTree = start,
+      Res = 0
+    ;
+      LTree = loser(_, _, _, TL, _, TR),
+      Res = 1 + int.max(ltree_height(TL), ltree_height(TR))
+    ).
 
 %---------------------------------------------------------------------------%
 
