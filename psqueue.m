@@ -77,29 +77,15 @@
 
     % Remove element with specific key from a priority queue.
     %
-:- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
-:- pred delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is semidet.
-
-    % Remove element with specific key from a priority queue, call error/1 if
-    % element is not present.
-    %
-:- func det_delete(K, psqueue(K, P)) = psqueue(K, P) is det.
-:- pred det_delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
+:- func delete(K, psqueue(K, P)) = psqueue(K, P) is det.
+:- pred delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
     % Adjust priority of specified element. The old priority is given as an
     % argument to the adjustment function.
     %
-:- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
-:- pred adjust((func(P) = P)::in, K::in, psqueue(K, P)::in, psqueue(K, P)::in)
-    is semidet.
-
-    % Adjust priority of specified element. The old priority is given as an
-    % argument to the adjustment function, call error/1 if element is not
-    % present.
-    %
-:- func det_adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is det.
-:- pred det_adjust((func(P) = P)::in, K::in, psqueue(K, P)::in,
-                   psqueue(K, P)::out) is det.
+:- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is det.
+:- pred adjust((func(P) = P)::in, K::in, psqueue(K, P)::in, psqueue(K, P)::out)
+    is det.
 
     % Look-up the priority of the specified key.
     %
@@ -398,21 +384,15 @@ lookup_tv(K, TV) = Res :-
     ).
 
 
-adjust(F, K, PSQ) = adjust_tv(F, K, tournament_view(PSQ)).
+adjust(F, K, PSQ) = Res :-
+    ( PSQ0 = adjust_tv(F, K, tournament_view(PSQ)) ->
+        Res = PSQ0
+    ;
+        unexpected($file, $pred, "error while adjusting priority of an element")
+    ).
 
 adjust(F, K, PSQ, PSQ0) :-
     PSQ0 = adjust(F, K, PSQ).
-
-det_adjust(F, K, PSQ) = Res :-
-    ( PSQ0 = adjust(F, K, PSQ) ->
-        Res = PSQ0
-    ;
-        unexpected($file, $pred, "element to adjust not present in priority\
-                  search queue")
-    ).
-
-det_adjust(F, K, PSQ, PSQ0) :-
-    PSQ0 = det_adjust(F, K, PSQ).
 
 :- func adjust_tv(func(P) = P, K, t_tournament_view(K, P)) = psqueue(K, P)
     is semidet.
@@ -473,20 +453,15 @@ insert_tv(IK, IP, TV) = Res :-
       )
     ).
 
-delete(DK, PSQ) = delete_tv(DK, tournament_view(PSQ)).
+delete(DK, PSQ) = Res :-
+    ( PSQ0 = delete_tv(DK, tournament_view(PSQ)) ->
+        Res = PSQ0
+    ;
+        unexpected($file, $pred, "error while deleting an element")
+    ).
 
 delete(DK, PSQ, PSQ0) :-
     PSQ0 = delete(DK, PSQ).
-
-det_delete(DK, PSQ) = Res :-
-    ( PSQ0 = delete(DK, PSQ) ->
-        Res = PSQ0
-    ;
-        unexpected($file, $pred, "element not in priority search queue")
-    ).
-
-det_delete(DK, PSQ, PSQ0) :-
-    PSQ0 = det_delete(DK, PSQ).
 
 :- func delete_tv(K, t_tournament_view(K, P)) = psqueue(K, P) is semidet.
 delete_tv(DK, TV) = Res :-
