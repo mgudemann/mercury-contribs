@@ -11,9 +11,9 @@
 % A psqueue is a priority search queue. A priority search queue holds a
 % collection of keys together with a priority; the interface provides
 % operations to create an empty priority queue, to insert a key with an
-% associated priority into a priority queue, to remove the element with the
-% highest priority, to look up a key and its priority and to adjust the
-% priority of a key.
+% associated priority into a priority queue, to remove the key with the highest
+% priority, to look up a key and its priority and to adjust the priority of a
+% key.
 %
 % The implementation here follows closely the description given in Ralf Hinze's
 % paper "A Simple Implementation Technique for Priority Search Queues", ICFP
@@ -38,7 +38,7 @@
 
 :- type psqueue(K, P).
 
-    % create an empty priority search queue
+    % Create an empty priority search queue.
     %
 :- func init = psqueue(K, P).
 :- pred init(psqueue(K, P)::out) is det.
@@ -47,90 +47,93 @@
     %
 :- pred is_empty(psqueue(K, P)::in) is semidet.
 
-    % remove element with minimal priority
+    % Remove element with minimal priority.
     %
 :- pred del_min(psqueue(K, P)::in, K::out, P::out, psqueue(K, P)::out)
     is semidet.
 
-    % peek at highest priority key
+    % Peek at highest priority key, do not change the priority search queue.
     %
 :- pred peek(psqueue(K, P)::in, K::out, P::out) is semidet.
 
-    % as peek/3, will call error/1 if the psqueue is empty
+    % As peek/3, will call error/1 if the psqueue is empty.
     %
 :- pred det_peek(psqueue(K, P)::in, K::out, P::out) is det.
 
-    % create an ordered association list from priority search queue
+    % Create an ordered association list from a priority search queue.
     %
 :- func to_ord_assoc_list(psqueue(K, P)) = assoc_list(K, P).
 :- pred to_ord_assoc_list(psqueue(K, P)::in, assoc_list(K, P)::out) is det.
 
-    % remove element with specific key from priority queue
+    % Remove element with specific key from a priority queue.
     %
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- pred delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is semidet.
 
-    % remove element with specific key from priority queue, call error/1 if
-    % element is not present
+    % Remove element with specific key from a priority queue, call error/1 if
+    % element is not present.
     %
 :- func det_delete(K, psqueue(K, P)) = psqueue(K, P) is det.
 :- pred det_delete(K::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
-    % insert key with specified priority into priority search queue
+    % Insert key with specified priority into a priority search queue.
     %
 :- func insert(K, P, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- pred insert(K::in, P::in, psqueue(K, P)::in, psqueue(K, P)::out) is semidet.
 
-    % As above, will call error/1 if the key is already present
+    % As above, will call error/1 if the key is already present.
     %
 :- func det_insert(K, P, psqueue(K, P)) = psqueue(K, P) is det.
 :- pred det_insert(K::in, P::in, psqueue(K, P)::in, psqueue(K, P)::out) is det.
 
-    % adjust priority of specified element. The old priority is given as an
-    % argument to the adjustment function
+    % Adjust priority of specified element. The old priority is given as an
+    % argument to the adjustment function.
     %
 :- func adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is semidet.
 :- pred adjust((func(P) = P)::in, K::in, psqueue(K, P)::in, psqueue(K, P)::in)
     is semidet.
 
-   % adjust priority of specified element. The old priority is given as an
+    % Adjust priority of specified element. The old priority is given as an
     % argument to the adjustment function, call error/1 if element is not
-    % present
+    % present.
     %
 :- func det_adjust(func(P) = P, K, psqueue(K, P)) = psqueue(K, P) is det.
 :- pred det_adjust((func(P) = P)::in, K::in, psqueue(K, P)::in,
-                  psqueue(K, P)::out) is det.
+                   psqueue(K, P)::out) is det.
 
-    % lookup the priority of the specified element
+    % Look-up the priority of the specified key.
     %
 :- func lookup(K, psqueue(K, P)) = P is semidet.
 :- pred lookup(K::in, psqueue(K, P)::in, P::out) is semidet.
 
-    % lookup the priority of the specified element, call error/1 if element is
-    % not present
+    % Look-up the priority of the specified element, call error/1 if element is
+    % not present.
     %
 :- func det_lookup(K, psqueue(K, P)) = P is det.
 :- pred det_lookup(K::in, psqueue(K, P)::in, P::out) is det.
 
-    % return the size of the priority search queue as the number of elements
+    % Return the size of the priority search queue as the number of elements.
     %
 :- func size(psqueue(K, P)) = int is det.
 :- pred size(psqueue(K, P)::in, int::out) is det.
 
-    % true if the priority search queue respects the semi heap properties,
+    % true iff the priority search queue respects the semi heap properties,
     % i.e., 1) the top element has the highest priority and 2) for each node of
     % the loser tree, the priority of the loser is higher or equal to the
-    % priorities in the subtree from which the loser originates
+    % priorities in the subtree from which the loser originates.
     %
 :- pred is_semi_heap(psqueue(K, P)::in) is semidet.
 
-    % true if the priority search queue respects the search tree properties,
+    % true iff the priority search queue respects the search tree properties,
     % i.e., for each node the keys in the left subtree are smaller as or equal
     % to the split key and the keys in the right subtree are larger than the
-    % split key
+    % split key.
     %
 :- pred is_search_tree(psqueue(K, P)::in) is semidet.
 
+    % true iff the underlying loser tree is a weight-balanced tree with
+    % parameter `balance_omega'
+    %
 :- pred is_balanced_tree(psqueue(K, P)::in) is semidet.
 
 %---------------------------------------------------------------------------%
