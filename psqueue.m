@@ -882,10 +882,13 @@ max_key_loser_tree(LTree, CurrMax, MaxKey) :-
       LTree = start, MaxKey = no
     ;
       LTree = loser(_, Key, _, TL, _, TR),
-      ( CurrMax `leq` Key ->
-          NewKey = CurrMax
+      compare(CMP, CurrMax, Key),
+      (
+        ( CMP = (=); CMP = (>) ),
+        NewKey = CurrMax
       ;
-          NewKey = Key
+        CMP = (<),
+        NewKey = Key
       ),
       max_key_loser_tree(TL, NewKey, MaxKey1),
       max_key_loser_tree(TR, NewKey, MaxKey2),
