@@ -673,7 +673,6 @@ min_prio_loser_tree(LTree, MinPrio) :-
       LTree = start,
       MinPrio = no
     ;
-
       LTree = loser(_, _, Prio, TL, _, TR),
       min_prio_loser_tree(TL, Prio, MinPrio1),
       min_prio_loser_tree(TR, Prio, MinPrio2),
@@ -910,7 +909,6 @@ max_key_loser_tree(LTree, CurrMax, MaxKey) :-
       )
     ).
 
-
 is_balanced_tree(PSQ) :-
     (
       PSQ = void
@@ -919,8 +917,8 @@ is_balanced_tree(PSQ) :-
       all_nodes_balanced(T)
     ).
 
-% verify that all nodes have balanced child trees
-%
+    % verify that all nodes have balanced child trees
+    %
 :- pred all_nodes_balanced(ltree(K, P)::in) is semidet.
 all_nodes_balanced(LTree) :-
     (
