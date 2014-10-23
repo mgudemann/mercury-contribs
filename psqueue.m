@@ -763,21 +763,21 @@ all_search_keys(LTree) :-
     (
       LTree = start
     ;
-      LTree = loser(_, K, _, TL, _, TR),
+      LTree = loser(_, _, _, TL, SplitKey, TR),
       max_key_loser_tree(TL, MaxKeyL),
       min_key_loser_tree(TR, MinKeyR),
       (
         MaxKeyL = no
       ;
         MaxKeyL = yes(MaxKey),
-        MaxKey `leq` K,
+        MaxKey `leq` SplitKey,
         all_search_keys(TL)
       ),
       (
         MinKeyR = no
       ;
         MinKeyR = yes(MinKey),
-        compare(CMP, MinKey, K),
+        compare(CMP, MinKey, SplitKey),
         CMP = (>),
         all_search_keys(TR)
       )
