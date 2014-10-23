@@ -121,6 +121,10 @@
     %
 :- pred key_condition(psqueue(K, P)::in) is semidet.
 
+    % true, iff keys are unique
+    %
+:- pred is_finite_map(psqueue(K, P)::in) is semidet.
+
 %---------------------------------------------------------------------------%
 %---------------------------------------------------------------------------%
 
@@ -928,6 +932,30 @@ key_condition(PSQ, T) :-
       lookup(SplitKey, PSQ, _),
       key_condition(PSQ, TL),
       key_condition(PSQ, TR)
+    ).
+
+
+is_finite_map(PSQ) :-
+    (
+      PSQ = void
+    ;
+      PSQ = winner(_, _, T, _),
+      KeyList = get_keys(T),
+      UniqList = list.sort_and_remove_dups(KeyList),
+      length(KeyList, LK),
+      length(UniqList, LUK),
+      LK = LUK
+    ).
+
+:- func get_keys(ltree(K, P)) = list(K).
+
+get_keys(T) = Res :-
+    (
+      T = start,
+      Res = []
+    ;
+      T = loser(_, K, _, TL, _, TR),
+      Res = [K | get_keys(TL) ++ get_keys(TR)]
     ).
 
 %---------------------------------------------------------------------------%
