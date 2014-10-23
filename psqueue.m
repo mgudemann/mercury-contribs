@@ -117,10 +117,13 @@
     %
 :- pred is_search_tree(psqueue(K, P)::in) is semidet.
 
-    % true iff the underlying loser tree is a weight-balanced tree with
-    % parameter `balance_omega'
+    % true, iff maximal key and all split keys are present
     %
-:- pred is_balanced_tree(psqueue(K, P)::in) is semidet.
+:- pred key_condition(psqueue(K, P)::in) is semidet.
+
+    % true, iff keys are unique
+    %
+:- pred is_finite_map(psqueue(K, P)::in) is semidet.
 
 %---------------------------------------------------------------------------%
 %---------------------------------------------------------------------------%
@@ -763,21 +766,21 @@ all_search_keys(LTree) :-
     (
       LTree = start
     ;
-      LTree = loser(_, K, _, TL, _, TR),
+      LTree = loser(_, _, _, TL, SplitKey, TR),
       max_key_loser_tree(TL, MaxKeyL),
       min_key_loser_tree(TR, MinKeyR),
       (
         MaxKeyL = no
       ;
         MaxKeyL = yes(MaxKey),
-        MaxKey `leq` K,
+        MaxKey `leq` SplitKey,
         all_search_keys(TL)
       ),
       (
         MinKeyR = no
       ;
         MinKeyR = yes(MinKey),
-        compare(CMP, MinKey, K),
+        compare(CMP, MinKey, SplitKey),
         CMP = (>),
         all_search_keys(TR)
       )
@@ -912,38 +915,50 @@ max_key_loser_tree(LTree, CurrMax, MaxKey) :-
       )
     ).
 
-is_balanced_tree(PSQ) :-
+
+key_condition(PSQ) :-
+    (
+      PSQ = void
+    ;
+      PSQ = winner(_, _, T, MaxKey),
+      lookup(MaxKey, PSQ, _),
+      key_condition(PSQ, T)
+    ).
+
+:- pred key_condition(psqueue(K, P)::in, ltree(K, P)::in) is semidet.
+
+key_condition(PSQ, T) :-
+    (
+      T = start
+    ;
+      T = loser(_, _, _, TL, SplitKey, TR),
+      lookup(SplitKey, PSQ, _),
+      key_condition(PSQ, TL),
+      key_condition(PSQ, TR)
+    ).
+
+
+is_finite_map(PSQ) :-
     (
       PSQ = void
     ;
       PSQ = winner(_, _, T, _),
-      all_nodes_balanced(T)
+      KeyList = get_keys(T),
+      UniqList = list.sort_and_remove_dups(KeyList),
+      length(KeyList, LK),
+      length(UniqList, LUK),
+      LK = LUK
     ).
 
-    % verify that all nodes have balanced child trees
-    %
-:- pred all_nodes_balanced(ltree(K, P)::in) is semidet.
-all_nodes_balanced(LTree) :-
-    (
-      LTree = start
-    ;
-      LTree = loser(_, _, _, TL, _, TR),
-      LHeight = ltree_height(TL),
-      RHeight = ltree_height(TR),
-      HDiff = int.abs(LHeight - RHeight),
-      HDiff =< balance_omega * int.max(LHeight, RHeight),
-      all_nodes_balanced(TL),
-      all_nodes_balanced(TR)
-    ).
+:- func get_keys(ltree(K, P)) = list(K).
 
-:- func ltree_height(ltree(K, P)) = int is det.
-ltree_height(LTree) = Res :-
+get_keys(T) = Res :-
     (
-      LTree = start,
-      Res = 0
+      T = start,
+      Res = []
     ;
-      LTree = loser(_, _, _, TL, _, TR),
-      Res = 1 + int.max(ltree_height(TL), ltree_height(TR))
+      T = loser(_, K, _, TL, _, TR),
+      Res = [K | get_keys(TL) ++ get_keys(TR)]
     ).
 
 %---------------------------------------------------------------------------%
