@@ -117,10 +117,9 @@
     %
 :- pred is_search_tree(psqueue(K, P)::in) is semidet.
 
-    % true iff the underlying loser tree is a weight-balanced tree with
-    % parameter `balance_omega'
+    % true, iff maximal key and all split keys are present
     %
-:- pred is_balanced_tree(psqueue(K, P)::in) is semidet.
+:- pred key_condition(psqueue(K, P)::in) is semidet.
 
 %---------------------------------------------------------------------------%
 %---------------------------------------------------------------------------%
@@ -909,38 +908,26 @@ max_key_loser_tree(LTree, CurrMax, MaxKey) :-
       )
     ).
 
-is_balanced_tree(PSQ) :-
+
+key_condition(PSQ) :-
     (
       PSQ = void
     ;
-      PSQ = winner(_, _, T, _),
-      all_nodes_balanced(T)
+      PSQ = winner(_, _, T, MaxKey),
+      lookup(MaxKey, PSQ, _),
+      key_condition(PSQ, T)
     ).
 
-    % verify that all nodes have balanced child trees
-    %
-:- pred all_nodes_balanced(ltree(K, P)::in) is semidet.
-all_nodes_balanced(LTree) :-
-    (
-      LTree = start
-    ;
-      LTree = loser(_, _, _, TL, _, TR),
-      LHeight = ltree_height(TL),
-      RHeight = ltree_height(TR),
-      HDiff = int.abs(LHeight - RHeight),
-      HDiff =< balance_omega * int.max(LHeight, RHeight),
-      all_nodes_balanced(TL),
-      all_nodes_balanced(TR)
-    ).
+:- pred key_condition(psqueue(K, P)::in, ltree(K, P)::in) is semidet.
 
-:- func ltree_height(ltree(K, P)) = int is det.
-ltree_height(LTree) = Res :-
+key_condition(PSQ, T) :-
     (
-      LTree = start,
-      Res = 0
+      T = start
     ;
-      LTree = loser(_, _, _, TL, _, TR),
-      Res = 1 + int.max(ltree_height(TL), ltree_height(TR))
+      T = loser(_, _, _, TL, SplitKey, TR),
+      lookup(SplitKey, PSQ, _),
+      key_condition(PSQ, TL),
+      key_condition(PSQ, TR)
     ).
 
 %---------------------------------------------------------------------------%
