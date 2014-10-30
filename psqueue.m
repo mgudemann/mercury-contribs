@@ -3,7 +3,7 @@
 %---------------------------------------------------------------------------%
 %
 % File: psqueue.m.
-% Main author: mgudemann.
+% Main author: Matthias Güdemann.
 % Stability: low.
 %
 % This module implements a priority search queue ADT.
