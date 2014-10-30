@@ -75,6 +75,11 @@
 :- func to_ord_assoc_list(psqueue(K, P)) = assoc_list(K, P).
 :- pred to_ord_assoc_list(psqueue(K, P)::in, assoc_list(K, P)::out) is det.
 
+    % Create a priority search queue from an assoc_list of key, priority pairs
+    %
+:- func from_assoc_list(assoc_list(K, P)) = psqueue(K, P).
+:- pred from_assoc_list(assoc_list(K, P)::in, psqueue(K, P)::out) is det.
+
     % Remove element with specific key from a priority queue.
     %
 :- func delete(K, psqueue(K, P)) = psqueue(K, P) is det.
@@ -97,6 +102,12 @@
     %
 :- func det_lookup(K, psqueue(K, P)) = P is det.
 :- pred det_lookup(K::in, psqueue(K, P)::in, P::out) is det.
+
+    % Range query for all key - priority pairs less or equal to a specified
+    % priority
+    %
+:- func at_most(P, psqueue(K, P)) = assoc_list(K, P).
+:- pred at_most(P::in, psqueue(K, P)::in, assoc_list(K, P)::out) is det.
 
     % Return the size of the priority search queue as the number of elements.
     %
@@ -251,6 +262,26 @@ to_ord_assoc_list(PSQ, AList) :-
         AList = []
     ).
 
+from_assoc_list(AList) = Res :-
+    from_assoc_list(AList, Res).
+
+from_assoc_list(AList, PSQ) :-
+    from_assoc_list2(AList, init, PSQ).
+
+:- pred from_assoc_list2(assoc_list(K, P)::in, psqueue(K, P)::in,
+                       psqueue(K, P)::out) is det.
+
+from_assoc_list2(AList, PSQ0, PSQ) :-
+    (
+      AList = [],
+      PSQ = PSQ0
+    ;
+      AList = [Pair | Rest],
+      Pair = (Key - Prio),
+      insert(Key, Prio, PSQ0, PSQ1),
+      from_assoc_list2(Rest, PSQ1, PSQ)
+    ).
+
 det_del_min(PSQ, MinKey, MinPrio, NewPSQ) :-
     ( del_min(PSQ, MinKey0, MinPrio0, NewPSQ0) ->
         NewPSQ = NewPSQ0,
@@ -290,7 +321,7 @@ leq(ValLeft, ValRight) :-
 %---------------------------------------------------------------------------%
 
 :- type t_min_view(K, P) --->
-    emtpy
+    empty
     ; min(K, P, psqueue(K, P)).
 
 :- type t_tournament_view(K, P) --->
@@ -310,7 +341,7 @@ leq(ValLeft, ValRight) :-
 
 min_view(PSQ) = Res :-
     (
-      PSQ = void, Res = emtpy
+      PSQ = void, Res = empty
     ;
       PSQ = winner(Key, Prio, LTree, MaxKey),
       Res = min(Key, Prio, second_best(LTree, MaxKey))
@@ -486,6 +517,40 @@ delete_tv(DK, TV) = Res :-
           Res = tournament(delete(DK, TL), TR)
       ;
           Res = tournament(TL, delete(DK, TR))
+      )
+    ).
+
+at_most(P, PSQ) = Res :-
+    at_most(P, PSQ, Res).
+
+at_most(Pt, PSQ, AList) :-
+    MView = min_view(PSQ),
+    (
+      MView = empty,
+      AList = []
+    ;
+      MView = min(Key, Prio, _),
+      compare(CMP, Prio, Pt),
+      (
+        CMP = (>),
+        AList = []
+      ;
+        ( CMP = (=); CMP = (<) ),
+        (
+          TView = tournament_view(PSQ),
+          (
+            TView = emptySet,
+            AList = []
+          ;
+            TView = singleton(Key0, Prio0),
+            AList = [Key0 - Prio0]
+          ;
+            TView = tournament_between(T1, T2),
+            at_most(Pt, T1, AL0),
+            at_most(Pt, T2, AL1),
+            AList = AL0 ++ AL1
+          )
+        )
       )
     ).
 
