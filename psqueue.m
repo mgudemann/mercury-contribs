@@ -529,7 +529,7 @@ at_most(Pt, PSQ, AList) :-
       MView = empty,
       AList = []
     ;
-      MView = min(Key, Prio, _),
+      MView = min(_, Prio, _),
       compare(CMP, Prio, Pt),
       (
         CMP = (>),
