@@ -50,14 +50,14 @@ test_psqueue_empty :-
 
 :- pred test_psqueue_paper_ex(psqueue(string, int)::out) is det.
 test_psqueue_paper_ex(PSQ) :-
-    PSQ1 = psqueue.det_insert("Lennart", 1, psqueue.init),
-    PSQ2 = psqueue.det_insert("Erik", 2, PSQ1),
-    PSQ3 = psqueue.det_insert("Phil", 3, PSQ2),
-    PSQ4 = psqueue.det_insert("Charles", 4, PSQ3),
-    PSQ5 = psqueue.det_insert("Simon", 5, PSQ4),
-    PSQ6 = psqueue.det_insert("Mary", 6, PSQ5),
-    PSQ7 = psqueue.det_insert("Richard", 7, PSQ6),
-    PSQ8 = psqueue.det_insert("Warren", 8, PSQ7),
+    PSQ1 = psqueue.insert("Warren", 8, psqueue.init),
+    PSQ2 = psqueue.insert("Erik", 2, PSQ1),
+    PSQ3 = psqueue.insert("Richard", 7, PSQ2),
+    PSQ4 = psqueue.insert("Simon", 5, PSQ3),
+    PSQ5 = psqueue.insert("Charles", 4, PSQ4),
+    PSQ6 = psqueue.insert("Mary", 6, PSQ5),
+    PSQ7 = psqueue.insert("Phil", 3, PSQ6),
+    PSQ8 = psqueue.insert("Lennart", 1, PSQ7),
     % T0 = tournament(PSQ1,
     %                   tournament(PSQ2,
     %                              tournament(PSQ3, PSQ4))),
@@ -82,61 +82,48 @@ main(!IO) :-
     ;
         io.print("nok", !IO)
     ),
-    % io.nl(!IO),
-    % io.print("single tournament test: ", !IO),
-    % ( test_psqueue_singleton(PSQ),
-    %     io.print("ok ", !IO),
-    %     io.print(PSQ, !IO)
-    % ),
-    % io.nl(!IO),
-    % io.print("lloser test: ", !IO),
-    % ( test_psqueue_single_ltournament(PSQ0),
-    %     io.print("ok ", !IO),
-    %     io.print(PSQ0, !IO)
-    % ),
-    % io.nl(!IO),
-    % io.print("rloser test: ", !IO),
-    % ( test_psqueue_single_rtournament(PSQ1),
-    %     io.print("ok ", !IO),
-    %     io.print(PSQ1, !IO)
-    % ),
-    % io.nl(!IO),
-    % io.print("del_min test: ", !IO),
-    % ( test_psqueue_single_del_min(PSQ2) ->
-    %     io.print("ok ", !IO),
-    %     io.print(PSQ2, !IO)
-    % ;
-    %     io.print("nok", !IO)
-    % ),
-    % io.nl(!IO),
-    % io.print("max_key test: ", !IO),
-    % ( test_psqueue_single_max_key(MaxKeyl, MaxKeyr) ->
-    %     io.print("left: ", !IO),
-    %     io.print(MaxKeyl, !IO),
-    %     io.print(" right: ", !IO),
-    %     io.print(MaxKeyr, !IO)
-    % ;
-    %     io.print("nok", !IO)
-    % ),
     io.nl(!IO),
     io.print("paper example test: ", !IO),
     ( test_psqueue_paper_ex(PSQ_EX),
         io.print(PSQ_EX, !IO)
     ),
-    % io.nl(!IO),
-    % io.print("tournament view test: ", !IO),
-    % ( test_tournament_view_test(PSQ_EX, TV),
-    %     io.print(TV, !IO)
-    % ),
-    % io.nl(!IO),
-    % io.print("min_view test: ", !IO),
-    % ( test_tournament_min_view(PSQ_EX, Min),
-    %     io.print(Min, !IO)
-    % ),
     io.nl(!IO),
     io.print("to_ord_assoc_list test: ", !IO),
     ( to_ord_assoc_list(PSQ_EX, AList),
         io.print(AList, !IO)
+    ),
+    io.nl(!IO),
+    io.print("delete and to_or_assoc: ", !IO),
+    ( delete("Lennart", PSQ_EX, PSQ_DEL),
+        io.print(PSQ_DEL, !IO),
+        io.nl(!IO),
+        to_ord_assoc_list(PSQ_DEL, AList0),
+        io.print(AList0, !IO)
+    ),
+    io.nl(!IO),
+    io.print("from_assoc_list: ", !IO),
+    (
+      init(PSQ0),
+      insert("Homer", 4, PSQ0, PSQ1),
+      insert("Lisa", 1, PSQ1, PSQ2),
+      insert("Bart", 2, PSQ2, PSQ3),
+      insert("Maggie", 0, PSQ3, PSQ4),
+      insert("Marge", 3, PSQ4, PSQ5),
+      io.print(PSQ5, !IO),
+      io.nl(!IO),
+      to_ord_assoc_list(PSQ5, AList1),
+      io.print(AList1, !IO)
+    ),
+    io.nl(!IO),
+    (
+      adjust(func(_) = 10, "Maggie", PSQ5, PSQ6),
+      to_ord_assoc_list(PSQ6, AList2),
+      io.print(AList2, !IO)
+    ),
+    io.nl(!IO),
+    (
+      at_most(4, PSQ_EX, AList3),
+      io.print(AList3, !IO)
     ),
     io.nl(!IO)
     .
