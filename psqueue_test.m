@@ -48,16 +48,16 @@ test_psqueue_empty :-
 %     psqueue.max_key(PSQ2, MaxKeyl),
 %     psqueue.max_key(PSQ3, MaxKeyr).
 
-:- pred test_psqueue_paper_ex(psqueue(string, int)::out) is det.
+:- pred test_psqueue_paper_ex(psqueue(int, string)::out) is det.
 test_psqueue_paper_ex(PSQ) :-
-    PSQ1 = psqueue.insert("Warren", 8, psqueue.init),
-    PSQ2 = psqueue.insert("Erik", 2, PSQ1),
-    PSQ3 = psqueue.insert("Richard", 7, PSQ2),
-    PSQ4 = psqueue.insert("Simon", 5, PSQ3),
-    PSQ5 = psqueue.insert("Charles", 4, PSQ4),
-    PSQ6 = psqueue.insert("Mary", 6, PSQ5),
-    PSQ7 = psqueue.insert("Phil", 3, PSQ6),
-    PSQ8 = psqueue.insert("Lennart", 1, PSQ7),
+    PSQ1 = psqueue.insert(8, "Warren", psqueue.init),
+    PSQ2 = psqueue.insert(2, "Erik", PSQ1),
+    PSQ3 = psqueue.insert(7, "Richard", PSQ2),
+    PSQ4 = psqueue.insert(5, "Simon", PSQ3),
+    PSQ5 = psqueue.insert(4, "Charles", PSQ4),
+    PSQ6 = psqueue.insert(6, "Mary", PSQ5),
+    PSQ7 = psqueue.insert(3, "Phil", PSQ6),
+    PSQ8 = psqueue.insert(1, "Lennart", PSQ7),
     % T0 = tournament(PSQ1,
     %                   tournament(PSQ2,
     %                              tournament(PSQ3, PSQ4))),
@@ -104,11 +104,11 @@ main(!IO) :-
     io.print("from_assoc_list: ", !IO),
     (
       init(PSQ0),
-      insert("Homer", 4, PSQ0, PSQ1),
-      insert("Lisa", 1, PSQ1, PSQ2),
-      insert("Bart", 2, PSQ2, PSQ3),
-      insert("Maggie", 0, PSQ3, PSQ4),
-      insert("Marge", 3, PSQ4, PSQ5),
+      insert(4, "Homer", PSQ0, PSQ1),
+      insert(1, "Lisa", PSQ1, PSQ2),
+      insert(2, "Bart", PSQ2, PSQ3),
+      insert(0, "Maggie", PSQ3, PSQ4),
+      insert(3, "Marge", PSQ4, PSQ5),
       io.print(PSQ5, !IO),
       io.nl(!IO),
       to_ord_assoc_list(PSQ5, AList1),
