@@ -277,8 +277,8 @@ from_assoc_list2(AList, PSQ0, PSQ) :-
       PSQ = PSQ0
     ;
       AList = [Pair | Rest],
-      Pair = (Key - Prio),
-      insert(Key, Prio, PSQ0, PSQ1),
+      Pair = (Prio - Key),
+      insert(Prio, Key, PSQ0, PSQ1),
       from_assoc_list2(Rest, PSQ1, PSQ)
     ).
 
