@@ -255,9 +255,9 @@ to_ord_assoc_list(PSQ) = Res :-
     to_ord_assoc_list(PSQ, Res).
 
 to_ord_assoc_list(PSQ, AList) :-
-    ( psqueue.del_min(K, P, PSQ, PSQ0) ->
+    ( psqueue.del_min(P, K, PSQ, PSQ0) ->
         to_ord_assoc_list(PSQ0, AList0),
-        AList = [K - P | AList0]
+        AList = [P - K | AList0]
     ;
         AList = []
     ).
@@ -543,8 +543,8 @@ at_most(Pt, PSQ, AList) :-
             TView = emptySet,
             AList = []
           ;
-            TView = singleton(Prio0, Key0),
-            AList = [Key0 - Prio0]
+            TView = singleton(Key0, Prio0),
+            AList = [Prio0 - Key0]
           ;
             TView = tournament_between(T1, T2),
             at_most(Pt, T1, AL0),
