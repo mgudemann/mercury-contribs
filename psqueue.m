@@ -205,7 +205,10 @@ max_key(PSQ, MaxKey) :-
 
     % generate specialized code for integral priorities
     %
-:- pragma type_spec(tournament/3, P = int).
+:- pragma type_spec(tournament/2, (K = int, P = int)).
+:- pragma type_spec(tournament/3, (K = int, P = int)).
+:- pragma type_spec(tournament/2, (P = int)).
+:- pragma type_spec(tournament/3, (P = int)).
 
 tournament(PSQ0, PSQ1, PSQ) :-
     PSQ = tournament(PSQ0, PSQ1).
@@ -231,6 +234,9 @@ tournament(PSQ1, PSQ2) = Res :-
         )
     ).
 
+
+:- pragma type_spec(second_best/2, (K = int, P = int)).
+:- pragma type_spec(second_best/2, (P = int)).
 
 :- func second_best(ltree(K, P), K) = psqueue(P, K) is det.
 second_best(LTree, Key) = Res :-
@@ -305,6 +311,7 @@ det_peek(PSQ, MinPrio, MinKey) :-
         unexpected($file, $pred, "priority search queue is empty")
     ).
 
+:- pragma inline(leq/2).
 :- pred leq(V::in, V::in) is semidet.
 :- pragma type_spec(leq/2, V = int).
 leq(ValLeft, ValRight) :-
@@ -345,6 +352,9 @@ min_view(PSQ) = Res :-
       PSQ = winner(Prio, Key, LTree, MaxKey),
       Res = min(Prio, Key, second_best(LTree, MaxKey))
     ).
+
+:- pragma type_spec(tournament_view/1, (K = int, P = int)).
+:- pragma type_spec(tournament_view/1, (P = int)).
 
     % get tournament view of priority search queue
     %
@@ -416,6 +426,12 @@ search_tv(K, TV) = Res :-
       )
     ).
 
+:- pragma type_spec(adjust/3, (K = int, P = int)).
+:- pragma type_spec(adjust/4, (K = int, P = int)).
+:- pragma type_spec(adjust_tv/3, (K = int, P = int)).
+:- pragma type_spec(adjust/3, (P = int)).
+:- pragma type_spec(adjust/4, (P = int)).
+:- pragma type_spec(adjust_tv/3, (P = int)).
 
 adjust(F, K, PSQ) = Res :-
     ( PSQ0 = adjust_tv(F, K, tournament_view(PSQ)) ->
@@ -448,6 +464,13 @@ adjust_tv(Func, K, TV) = Res :-
           Res = tournament(TL, adjust(Func, K, TR))
       )
     ).
+
+:- pragma type_spec(insert/3, (K = int, P = int)).
+:- pragma type_spec(insert/4, (K = int, P = int)).
+:- pragma type_spec(insert_tv/3, (K = int, P = int)).
+:- pragma type_spec(insert/3, (P = int)).
+:- pragma type_spec(insert/4, (P = int)).
+:- pragma type_spec(insert_tv/3, (P = int)).
 
 insert(IP, IK, PSQ) = Res :-
     ( PSQ0 = insert_tv(IK, IP, tournament_view(PSQ)) ->
@@ -594,6 +617,22 @@ construct_node(Key, Prio, L, SplitKey, R) = Res :-
     %
 :- func balance_omega = t_ltree_size.
 balance_omega = 4.
+
+:- pragma type_spec(balance/5, (K = int, P = int)).
+:- pragma type_spec(balance_left/5, (K = int, P = int)).
+:- pragma type_spec(balance_right/5, (K = int, P = int)).
+:- pragma type_spec(single_left/5, (K = int, P = int)).
+:- pragma type_spec(single_right/5, (K = int, P = int)).
+:- pragma type_spec(double_left/5, (K = int, P = int)).
+:- pragma type_spec(double_right/5, (K = int, P = int)).
+
+:- pragma type_spec(balance/5, (P = int)).
+:- pragma type_spec(balance_left/5, (P = int)).
+:- pragma type_spec(balance_right/5, (P = int)).
+:- pragma type_spec(single_left/5, (P = int)).
+:- pragma type_spec(single_right/5, (P = int)).
+:- pragma type_spec(double_left/5, (P = int)).
+:- pragma type_spec(double_right/5, (P = int)).
 
 :- func balance(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
 :- func balance_left(K, P, ltree(K, P), K, ltree(K, P)) = ltree(K, P) is det.
