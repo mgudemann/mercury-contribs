@@ -8,13 +8,18 @@
 
 :- pred mp_add(mp_int::in, mp_int::in, mp_int::out) is det.
 :- pred mp_sub(mp_int::in, mp_int::in, mp_int::out) is det.
+:- pred mp_neg(mp_int::in, mp_int::out) is det.
+:- pred mp_abs(mp_int::in, mp_int::out) is det.
 :- pred mp_mul(mp_int::in, mp_int::in, mp_int::out) is det.
 :- pred mp_quot_rem(mp_int::in, mp_int::in, mp_int::out, mp_int::out) is det.
 
 :- func '+'(mp_int, mp_int) = mp_int.
 :- func '-'(mp_int, mp_int) = mp_int.
+:- func '-'(mp_int) = mp_int.
+:- func 'abs'(mp_int) = mp_int.
 :- func '*'(mp_int, mp_int) = mp_int.
 :- func '//'(mp_int, mp_int) = mp_int.
+:- func 'div'(mp_int, mp_int) = mp_int.
 :- func 'mod'(mp_int, mp_int) = mp_int.
 
 :- func zero = mp_int.
@@ -79,6 +84,26 @@
                       mp_init(C);
                       mp_sub(A, B, C);
                       ").
+
+:- pragma foreign_proc("C",
+                      mp_neg(A::in, C::out),
+                      [will_not_call_mercury, promise_pure],
+                      "
+                      C = malloc(sizeof(mp_int));
+                      mp_init(C);
+                      mp_neg(A, C);
+                      ").
+
+:- pragma foreign_proc("C",
+                      mp_abs(A::in, C::out),
+                      [will_not_call_mercury, promise_pure],
+                      "
+                      C = malloc(sizeof(mp_int));
+                      mp_init(C);
+                      mp_abs(A, C);
+                      ").
+
+abs(A) = Res :- mp_abs(A, Res).
 
 :- pragma foreign_proc("C",
                       mp_mul(A::in, B::in, C::out),
@@ -197,8 +222,10 @@ A =< B :-
 
 A + B = C   :- mp_add(A, B, C).
 A - B = C   :- mp_sub(A, B, C).
+-A = C      :- mp_neg(A, C).
 A * B = C   :- mp_mul(A, B, C).
 A // B = C  :- mp_quot_rem(A, B, C, _).
+A div B     = A // B.
 A mod B = C :- mp_quot_rem(A, B, _, C).
 
 zero = mp_int(0).
