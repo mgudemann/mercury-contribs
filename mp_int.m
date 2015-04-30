@@ -4,8 +4,6 @@
 
 :- type mp_int.
 
-:- pragma foreign_type("C", mp_int, "mp_int*").
-
 :- pred mp_add(mp_int::in, mp_int::in, mp_int::out) is det.
 :- pred mp_sub(mp_int::in, mp_int::in, mp_int::out) is det.
 :- pred mp_neg(mp_int::in, mp_int::out) is det.
@@ -37,8 +35,9 @@
 :- pred '<'(mp_int::in, mp_int::in) is semidet.
 :- pred '>='(mp_int::in, mp_int::in) is semidet.
 :- pred '=<'(mp_int::in, mp_int::in) is semidet.
+:- pred mp_eq(mp_int::in, mp_int::in) is semidet.
 
-:- pred mp_cmp(mp_int::in, mp_int::in, comparison_result::out) is det.
+:- pred mp_cmp(comparison_result::uo, mp_int::in, mp_int::in) is det.
 
 :- func pow(mp_int, mp_int) = mp_int.
 
@@ -50,6 +49,10 @@
 :- func mp_int(int) = mp_int.
 
 :- implementation.
+
+:- pragma foreign_type("C", mp_int, "mp_int*")
+    where equality is mp_eq, comparison is mp_cmp.
+
 
 :- import_module int.
 
@@ -144,7 +147,7 @@ abs(A) = Res :- mp_abs(A, Res).
                       ").
 
 :- pragma foreign_proc("C",
-                      mp_cmp(A::in, B::in, C::out),
+                      mp_cmp(C::uo, A::in, B::in),
                       [will_not_call_mercury, promise_pure],
                       "
                       int result;
@@ -207,18 +210,19 @@ mp_shift_right(A, N) = Res :-
 
 X >> N = mp_shift_right(X, N).
 
-A > B :- mp_cmp(A, B, (>)).
+A > B :- mp_cmp((>), A, B).
 
-A < B :- mp_cmp(A, B, (<)).
+A < B :- mp_cmp((<), A, B).
 
 A >= B :-
-    mp_cmp(A, B, C),
+    mp_cmp(C, A, B),
     ( C = (>); C = (=)).
 
 A =< B :-
-    mp_cmp(A, B, C),
+    mp_cmp(C, A, B),
     ( C = (<); C = (=)).
 
+mp_eq(A, B) :- mp_cmp((=), A, B).
 
 A + B = C   :- mp_add(A, B, C).
 A - B = C   :- mp_sub(A, B, C).
@@ -231,10 +235,6 @@ A mod B = C :- mp_quot_rem(A, B, _, C).
 zero = mp_int(0).
 one  = mp_int(1).
 two  = mp_int(2).
-
-:- pragma memo(two/0).
-:- pragma memo(zero/0).
-:- pragma memo(one/0).
 
 pow(A, N) = Res :-
     ( N = zero ->
