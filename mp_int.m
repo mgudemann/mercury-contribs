@@ -63,45 +63,45 @@
 
 :- pragma foreign_proc("C",
                       mp_init(Value::in, Mp_Int::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      Mp_Int = malloc(sizeof(mp_int));
+                      Mp_Int = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(Mp_Int);
                       mp_set_int(Mp_Int, Value);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_add(A::in, B::in, C::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      C = malloc(sizeof(mp_int));
+                      C = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(C);
                       mp_add(A, B, C);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_sub(A::in, B::in, C::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      C = malloc(sizeof(mp_int));
+                      C = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(C);
                       mp_sub(A, B, C);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_neg(A::in, C::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      C = malloc(sizeof(mp_int));
+                      C = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(C);
                       mp_neg(A, C);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_abs(A::in, C::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      C = malloc(sizeof(mp_int));
+                      C = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(C);
                       mp_abs(A, C);
                       ").
@@ -110,37 +110,37 @@ abs(A) = Res :- mp_abs(A, Res).
 
 :- pragma foreign_proc("C",
                       mp_mul(A::in, B::in, C::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      C = malloc(sizeof(mp_int));
+                      C = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(C);
                       mp_mul(A, B, C);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_mul_2(A::in, B::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      B = malloc(sizeof(mp_int));
+                      B = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(B);
                       mp_mul_2(A, B);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_div_2(A::in, B::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      B = malloc(sizeof(mp_int));
+                      B = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(B);
                       mp_div_2(A, B);
                       ").
 
 :- pragma foreign_proc("C",
                       mp_quot_rem(A::in, B::in, Quot::out, Rem::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      Quot = malloc(sizeof(mp_int));
-                      Rem = malloc(sizeof(mp_int));
+                      Quot = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+                      Rem = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(Quot);
                       mp_init(Rem);
                       mp_div(A, B, Quot, Rem);
@@ -148,7 +148,7 @@ abs(A) = Res :- mp_abs(A, Res).
 
 :- pragma foreign_proc("C",
                       mp_cmp(C::uo, A::in, B::in),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
                       int result;
                       result = mp_cmp(A, B);
@@ -166,11 +166,11 @@ abs(A) = Res :- mp_abs(A, Res).
 
 :- pragma foreign_proc("C",
                       mp_to_string(A::in, Radix::in, S::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
                       int length;
                       mp_radix_size(A, Radix, &length);
-                      S = malloc(length * sizeof(char));
+                      MR_allocate_aligned_string_msg(S, length, MR_ALLOC_ID);
                       mp_toradix(A, S, Radix);
                       ").
 
@@ -178,9 +178,9 @@ to_string(A) = Res :- mp_to_string(A, 10, Res).
 
 :- pragma foreign_proc("C",
                       mp_from_string(S::in, Radix::in, A::out),
-                      [will_not_call_mercury, promise_pure],
+                      [will_not_call_mercury, promise_pure, thread_safe],
                       "
-                      A = malloc(sizeof(mp_int));
+                      A = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       mp_init(A);
                       mp_read_radix(A, S, Radix);
                       ").
