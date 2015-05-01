@@ -10,6 +10,8 @@
 :- pred mp_abs(mp_int::in, mp_int::out) is det.
 :- pred mp_mul(mp_int::in, mp_int::in, mp_int::out) is det.
 :- pred mp_quot_rem(mp_int::in, mp_int::in, mp_int::out, mp_int::out) is det.
+:- pred mp_square(mp_int::in, mp_int::out) is det.
+
 
 :- func '+'(mp_int, mp_int) = mp_int.
 :- func '-'(mp_int, mp_int) = mp_int.
@@ -147,6 +149,16 @@ abs(A) = Res :- mp_abs(A, Res).
                       ").
 
 :- pragma foreign_proc("C",
+                      mp_square(A::in, A_SQ::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+                      "
+                      A_SQ = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+                      mp_init(A_SQ);
+                      mp_sqr(A, A_SQ);
+                      ").
+
+
+:- pragma foreign_proc("C",
                       mp_cmp(C::uo, A::in, B::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
                       "
@@ -244,6 +256,6 @@ pow(A, N) = Res :-
             Res = A * pow(A, N - one)
         ;
             SQ = pow(A, N // two),
-            Res = SQ * SQ
+            mp_square(SQ, Res)
         )
     ).
