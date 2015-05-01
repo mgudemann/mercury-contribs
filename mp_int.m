@@ -110,14 +110,14 @@ mp_init(N, Res) :-
                       mp_init(Value::in, InitResult::out, OpResult::out,
                               Mp_Int::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       Mp_Int     = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(Mp_Int);
                       opResult   = mp_set_int(Mp_Int, Value);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_add(A, B, C) :-
     mp_add(A, B, InitResult, OpResult, C0),
@@ -133,14 +133,14 @@ mp_add(A, B, C) :-
                       mp_add(A::in, B::in, InitResult::out, OpResult::out,
                              C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(C);
                       opResult   = mp_add(A, B, C);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_sub(A, B, C) :-
     mp_sub(A, B, InitResult, OpResult, C0),
@@ -156,14 +156,14 @@ mp_sub(A, B, C) :-
                       mp_sub(A::in, B::in, InitResult::out, OpResult::out,
                              C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(C);
                       opResult   = mp_sub(A, B, C);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_neg(A, C) :-
     mp_neg(A, InitResult, OpResult, C0),
@@ -178,14 +178,14 @@ mp_neg(A, C) :-
 :- pragma foreign_proc("C",
                       mp_neg(A::in, InitResult::out, OpResult::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(C);
                       opResult   = mp_neg(A, C);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_abs(A, C) :-
     mp_abs(A, InitResult, OpResult, C0),
@@ -201,14 +201,14 @@ mp_abs(A, C) :-
 :- pragma foreign_proc("C",
                       mp_abs(A::in, InitResult::out, OpResult::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(C);
                       opResult   = mp_abs(A, C);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 abs(A) = Res :- mp_abs(A, Res).
 
@@ -226,14 +226,14 @@ mp_mul(A, B, C) :-
                       mp_mul(A::in, B::in, InitResult::out, OpResult::out,
                              C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(C);
                       opResult   = mp_mul(A, B, C);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_mul_2(A, C) :-
     mp_mul_2(A, InitResult, OpResult, C0),
@@ -248,14 +248,14 @@ mp_mul_2(A, C) :-
 :- pragma foreign_proc("C",
                       mp_mul_2(A::in, InitResult::out, OpResult::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(B);
                       opResult   = mp_mul_2(A, B);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_div_2(A, C) :-
     mp_div_2(A, InitResult, OpResult, C0),
@@ -270,14 +270,14 @@ mp_div_2(A, C) :-
 :- pragma foreign_proc("C",
                       mp_div_2(A::in, InitResult::out, OpResult::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(B);
                       opResult   = mp_div_2(A, B);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 mp_quot_rem(A, B, Quot, Rem) :-
     mp_quot_rem(A, B, InitResult1, InitResult2, OpResult, Quot0, Rem0),
@@ -298,7 +298,7 @@ mp_quot_rem(A, B, Quot, Rem) :-
                                   InitResult2::out, OpResult::out, Quot::out,
                                   Rem::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult1, initResult2, opResult;
                       Quot        = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       Rem         = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
@@ -308,7 +308,7 @@ mp_quot_rem(A, B, Quot, Rem) :-
                       InitResult1 = initResult1;
                       InitResult2 = initResult2;
                       OpResult    = opResult;
-                      ").
+").
 
 mp_square(A, C) :-
     mp_square(A, InitResult, OpResult, C0),
@@ -324,19 +324,19 @@ mp_square(A, C) :-
                       mp_square(A::in, InitResult::out, OpResult::out,
                                 A_SQ::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       A_SQ       = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(A_SQ);
                       opResult   = mp_sqr(A, A_SQ);
                       InitResult = initResult;
                       OpResult   = opResult;
-                      ").
+").
 
 :- pragma foreign_proc("C",
                       mp_cmp(C::uo, A::in, B::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int result;
                       result = mp_cmp(A, B);
                       if (result == MP_LT)
@@ -348,7 +348,7 @@ mp_square(A, C) :-
                          else
                             C = MR_COMPARE_EQUAL;
                        }
-                      ").
+").
 
 mp_to_string(A, Radix, S) :-
     mp_to_string(A, Radix, OpResult1, OpResult2, S0),
@@ -364,14 +364,14 @@ mp_to_string(A, Radix, S) :-
                       mp_to_string(A::in, Radix::in, OpResult1::out,
                                    OpResult2::out,S::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int length, opResult1, opResult2;
                       opResult1 = mp_radix_size(A, Radix, &length);
                       MR_allocate_aligned_string_msg(S, length, MR_ALLOC_ID);
                       opResult2 = mp_toradix(A, S, Radix);
                       OpResult1  = opResult1;
                       OpResult2  = opResult2;
-                      ").
+").
 
 to_string(A) = Res :- mp_to_string(A, 10, Res).
 
@@ -389,14 +389,14 @@ mp_from_string(S, Radix, A) :-
                       mp_from_string(S::in, Radix::in, InitResult::out,
                                      OpResult::out, A::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
-                      "
+"
                       int initResult, opResult;
                       A = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
                       initResult = mp_init(A);
                       opResult   = mp_read_radix(A, S, Radix);
                       OpResult   = opResult;
                       InitResult = initResult;
-                      ").
+").
 
 from_string(S) = Res :- mp_from_string(S, 10, Res).
 
