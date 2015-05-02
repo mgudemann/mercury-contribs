@@ -40,6 +40,7 @@
 :- func '//'(mp_int, mp_int) = mp_int.
 :- func 'div'(mp_int, mp_int) = mp_int.
 :- func 'mod'(mp_int, mp_int) = mp_int.
+:- func square(mp_int) = mp_int.
 
 :- func zero = mp_int.
 :- func one = mp_int.
@@ -68,6 +69,11 @@
 :- pred mp_from_string(string::in, int::in, mp_int::out) is det.
 :- func from_string(string) = mp_int.
 :- func mp_int(int) = mp_int.
+
+:- func gcd(mp_int, mp_int) = mp_int.
+:- func lcm(mp_int, mp_int) = mp_int.
+
+:- func sqrt(mp_int) = mp_int is semidet.
 
 :- implementation.
 
@@ -503,13 +509,14 @@ A =< B :-
 
 mp_eq(A, B) :- mp_cmp((=), A, B).
 
-A + B = C   :- mp_add(A, B, C).
-A - B = C   :- mp_sub(A, B, C).
--A = C      :- mp_neg(A, C).
-A * B = C   :- mp_mul(A, B, C).
-A // B = C  :- mp_quot_rem(A, B, C, _).
+A + B = C       :- mp_add(A, B, C).
+A - B = C       :- mp_sub(A, B, C).
+-A = C          :- mp_neg(A, C).
+A * B = C       :- mp_mul(A, B, C).
+A // B = C      :- mp_quot_rem(A, B, C, _).
 A div B     = A // B.
-A mod B = C :- mp_quot_rem(A, B, _, C).
+A mod B = C     :- mp_quot_rem(A, B, _, C).
+square(X) = Res :- mp_square(X, Res).
 
 zero = mp_int(0).
 one  = mp_int(1).
@@ -527,3 +534,87 @@ pow(A, N) = Res :-
             mp_square(SQ, Res)
         )
     ).
+
+gcd(A, B) = Res :-
+    mp_gcd(A, B, Result, C0),
+    ( Result = mp_result_okay  ->
+        Res = C0
+    ;
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            error("could not compute gcd of mp_ints")
+        )
+    ).
+
+:- pred mp_gcd(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_gcd(A::in, B::in, Result::out, C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(C);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_gcd(A, B, C);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+lcm(A, B) = Res :-
+    mp_lcm(A, B, Result, C0),
+    ( Result = mp_result_okay  ->
+        Res = C0
+    ;
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            error("could not compute gcd of mp_ints")
+        )
+    ).
+
+:- pred mp_lcm(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_lcm(A::in, B::in, Result::out, C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(C);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_lcm(A, B, C);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+sqrt(A) = Res :-
+    mp_sqrt(A, Result, C0),
+    Result \= mp_result_invalid_input,
+    ( Result = mp_result_okay  ->
+        Res = C0
+    ;
+        error("could not initialize mp_int")
+    ).
+
+:- pred mp_sqrt(mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_sqrt(A::in, Result::out, C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(C);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_sqrt(A, C);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
