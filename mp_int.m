@@ -209,6 +209,14 @@
     %
 :- func two = mp_int.
 
+    % Constant -1.
+    %
+:- func minusone = mp_int.
+
+    % Constant 10.
+    %
+:- func ten = mp_int.
+
 %---------------------------------------------------------------------------%
 %---------------------------------------------------------------------------%
 
@@ -1093,8 +1101,10 @@ det_sqrt(A) = Res :-
 % often used constants
 %---------------------------------------------------------------------------%
 
-zero = mp_int(0).
-one  = mp_int(1).
-two  = mp_int(2).
+minusone = mp_int(-1).
+zero     = mp_int(0).
+one      = mp_int(1).
+two      = mp_int(2).
+two      = mp_int(10).
 
 :- end_module mp_int.
