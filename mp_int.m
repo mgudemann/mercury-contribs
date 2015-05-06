@@ -197,6 +197,18 @@
     %
 :- func det_sqrt(mp_int) = mp_int.
 
+    % Bitwise or.
+    %
+:- func mp_int \/ mp_int = mp_int.
+
+    % Bitwise and.
+    %
+:- func mp_int /\ mp_int = mp_int.
+
+    % Bitwise xor.
+    %
+:- func mp_int `xor` mp_int = mp_int.
+
     % Constant 0.
     %
 :- func zero = mp_int.
@@ -1098,6 +1110,100 @@ det_sqrt(A) = Res :-
     ).
 
 %---------------------------------------------------------------------------%
+% bitwise operations
+%---------------------------------------------------------------------------%
+
+A /\ B = C :-
+    mp_and(A, B, Result, C0),
+    ( Result = mp_result_okay  ->
+        C = C0
+    ;
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            throw(math.domain_error("mp_int.mp_and: could not compute bitwise \
+AND"))
+        )
+    ).
+
+:- pred mp_and(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_and(A::in, B::in, Result::out, C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(C);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_and(A, B, C);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+A \/ B = C :-
+    mp_or(A, B, Result, C0),
+    ( Result = mp_result_okay  ->
+        C = C0
+    ;
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            throw(math.domain_error("mp_int.mp_and: could not compute bitwise \
+OR"))
+        )
+    ).
+
+:- pred mp_or(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_or(A::in, B::in, Result::out, C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(C);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_or(A, B, C);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+A `xor` B = C :-
+    mp_xor(A, B, Result, C0),
+    ( Result = mp_result_okay  ->
+        C = C0
+    ;
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            throw(math.domain_error("mp_int.mp_and: could not compute bitwise \
+XOR"))
+        )
+    ).
+
+:- pred mp_xor(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_xor(A::in, B::in, Result::out, C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(C);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_xor(A, B, C);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+%---------------------------------------------------------------------------%
 % often used constants
 %---------------------------------------------------------------------------%
 
@@ -1105,6 +1211,6 @@ minusone = mp_int(-1).
 zero     = mp_int(0).
 one      = mp_int(1).
 two      = mp_int(2).
-two      = mp_int(10).
+ten      = mp_int(10).
 
 :- end_module mp_int.
