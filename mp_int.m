@@ -48,8 +48,8 @@
 
 :- pred mp_mul_2(mp_int::in, mp_int::out) is det.
 :- pred mp_div_2(mp_int::in, mp_int::out) is det.
-:- func mp_shift_left(mp_int, int) = mp_int.
-:- func mp_shift_right(mp_int, int) =  mp_int.
+:- func shift_left(mp_int, int) = mp_int.
+:- func shift_right(mp_int, int) =  mp_int.
 :- func '<<'(mp_int, int) = mp_int.
 :- func '>>'(mp_int, int) = mp_int.
 
@@ -475,25 +475,69 @@ from_string(S) = Res :- mp_from_string(S, 10, Res).
 
 mp_int(N) = Res :- mp_init(N, Res).
 
-mp_shift_left(A, N) = Res :-
-    ( N > 0 ->
-        mp_mul_2(A, B),
-        Res = mp_shift_left(B, N - 1)
+shift_left(A, N) = Res :-
+    mp_shift_left(A, N, Result, A0),
+    ( Result = mp_result_okay ->
+        Res = A0
     ;
-        Res = A
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            error("could not shift left the mp_int")
+        )
     ).
 
-X << N = mp_shift_left(X, N).
+:- pred mp_shift_left(mp_int::in, int::in, mp_result_type::out, mp_int::out)
+    is det.
+:- pragma foreign_proc("C",
+                      mp_shift_left(A::in, N::in, Result::out, B::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init_copy(B, A);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_lshd(B, N);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
 
-mp_shift_right(A, N) = Res :-
-    ( N > 0 ->
-        mp_div_2(A, B),
-        Res = mp_shift_right(B, N - 1)
+shift_right(A, N) = Res :-
+    mp_shift_right(A, N, Result, A0),
+    ( Result = mp_result_okay ->
+        Res = A0
     ;
-        Res = A
+        ( Result = mp_result_out_of_mem ->
+            error("could not initialize mp_int")
+        ;
+            error("could not shift right the mp_int")
+        )
     ).
 
-X >> N = mp_shift_right(X, N).
+:- pred mp_shift_right(mp_int::in, int::in, mp_result_type::out, mp_int::out)
+    is det.
+:- pragma foreign_proc("C",
+                      mp_shift_right(A::in, N::in, Result::out, B::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init_copy(B, A);
+  if (initResult == MP_OKAY)
+    {
+      mp_rshd(B, N);
+      Result   = MP_OKAY;
+    }
+  else
+    Result     = initResult;
+").
+
+X << N = shift_left(X, N).
+
+X >> N = shift_right(X, N).
 
 A > B :- mp_cmp((>), A, B).
 
