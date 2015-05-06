@@ -176,7 +176,7 @@
     %
 :- func invmod(mp_int, mp_int) = mp_int.
 
-    % Modular exponentiation A = B ^ (C) mod D.
+    % Modular exponentiation A = B^C mod D.
     %
 :- func exptmod(mp_int, mp_int, mp_int) = mp_int.
 
