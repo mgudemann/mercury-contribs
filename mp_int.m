@@ -306,7 +306,7 @@ mp_add(A, B, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not add mp_ints")
+            throw(math.domain_error("mp_int.mp_add: could not add"))
         )
     ).
 
@@ -335,7 +335,7 @@ mp_sub(A, B, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not subtract mp_ints")
+            throw(math.domain_error("mp_int.mp_sub: could not subtract"))
         )
     ).
 
@@ -364,7 +364,7 @@ mp_neg(A, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not negate mp_int")
+            throw(math.domain_error("mp_int.mp_neg: could not negate value"))
         )
     ).
 
@@ -393,7 +393,8 @@ mp_abs(A, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could compute absolute value of mp_int")
+            throw(math.domain_error("mp_int.mp_abs: could not compute \
+absolute value"))
         )
     ).
 
@@ -424,7 +425,7 @@ mp_mul(A, B, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not multiply mp_ints")
+            throw(math.domain_error("mp_int.mp_mul: could not multiply"))
         )
     ).
 
@@ -453,7 +454,7 @@ mp_mul_2(A, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not double mp_int")
+            throw(math.domain_error("mp_int.mp_mul_2: could not double value"))
         )
     ).
 
@@ -482,7 +483,7 @@ mp_div_2(A, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not halve mp_int")
+            throw(math.domain_error("mp_int.mp_div_2: could not halve value"))
         )
     ).
 
@@ -515,7 +516,8 @@ divide_with_rem(A, B, Quot, Rem) :-
             ( Result = mp_result_out_of_mem ->
                 error("could not initialize mp_int")
             ;
-                error("could not compute quotient and remainder of mp_ints")
+                throw(math.domain_error("mp_int.mp_divide_with_rem: could not \
+compute quotient and remainder"))
             )
         )
     ).
@@ -549,7 +551,7 @@ mp_square(A, C) :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not square mp_int")
+            throw(math.domain_error("mp_int.mp_square: could not square"))
         )
     ).
 
@@ -699,7 +701,7 @@ shift_left(A, N) = Res :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not shift left the mp_int")
+            throw(math.domain_error("mp_int.shift_left: could not shift"))
         )
     ).
 
@@ -729,7 +731,7 @@ shift_right(A, N) = Res :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not shift right the mp_int")
+            throw(math.domain_error("mp_int.shift_right: could not shift"))
         )
     ).
 
@@ -892,7 +894,7 @@ gcd(A, B) = Res :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not compute gcd of mp_ints")
+            throw(math.domain_error("mp_int.gcd: could not compute gcd"))
         )
     ).
 
@@ -921,7 +923,7 @@ lcm(A, B) = Res :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not compute gcd of mp_ints")
+            throw(math.domain_error("mp_int.lcm: could not compute lcm"))
         )
     ).
 
@@ -947,7 +949,8 @@ jacobi(A, P) = Res :-
     ( Result = mp_result_okay  ->
         Res = C0
     ;
-        error("could not compute Jacobi symbol of mp_int")
+        throw(math.domain_error("mp_int.jacobi: could not compute Jacobi \
+symbol of mp_int"))
     ).
 
 :- pred mp_jacobi(mp_int::in, mp_int::in, mp_result_type::out, int::out) is det.
@@ -970,7 +973,7 @@ invmod(A, B) = Res :-
             error("could not initialize mp_int")
         ;
             throw(math.domain_error("mp_int.mp_invmod: could not compute\
-                                   modular inverse"))
+modular inverse"))
         )
     ).
 
@@ -1000,7 +1003,8 @@ exptmod(A, B, C) = Res :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            error("could not compute modular exponent of mp_int")
+            throw(math.domain_error("mp_int.exptmod: could not compute modular \
+exponentiation"))
         )
     ).
 
@@ -1022,7 +1026,7 @@ exptmod(A, B, C) = Res :-
     Result     = initResult;
 ").
 
-    % Standard number of rounds for Miller-Rabin primality test.
+    % Default number of rounds for Miller-Rabin primality test.
     %
 :- func miller_rabin_rounds = int.
 miller_rabin_rounds = 40.
@@ -1082,7 +1086,7 @@ det_sqrt(A) = Res :-
     ( sqrt(A, Res0) ->
         Res = Res0
     ;
-        error("mp_int.sqrt: value error")
+        throw(math.domain_error("mp_int.det_sqrt: argument negative"))
     ).
 
 %---------------------------------------------------------------------------%
