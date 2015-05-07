@@ -60,7 +60,7 @@
 
     % Truncating integer division with remainder.
     %
-:- pred divide_with_rem(mp_int::in, mp_int::in, mp_int::out, mp_int::out)
+:- pred quot_with_rem(mp_int::in, mp_int::in, mp_int::out, mp_int::out)
     is det.
 
     % Multiplication by 2.
@@ -524,9 +524,9 @@ mp_div_2(A, C) :-
     Result     = initResult;
 ").
 
-divide_with_rem(A, B, Quot, Rem) :-
+quot_with_rem(A, B, Quot, Rem) :-
     ( zero(B) ->
-        throw(math.domain_error("mp_int.divide_with_rem: division by zero"))
+        throw(math.domain_error("mp_int.quot_with_rem: division by zero"))
     ;
         mp_quot_rem(A, B, Result, Quot0, Rem0),
         ( Result = mp_result_okay ->
@@ -536,7 +536,7 @@ divide_with_rem(A, B, Quot, Rem) :-
             ( Result = mp_result_out_of_mem ->
                 error("could not initialize mp_int")
             ;
-                throw(math.domain_error("mp_int.mp_divide_with_rem: could not \
+                throw(math.domain_error("mp_int.quot_with_rem: could not \
 compute quotient and remainder"))
             )
         )
@@ -561,6 +561,75 @@ compute quotient and remainder"))
     }
   else
     Result     = initResult1 != MP_OKAY ? initResult1 : initResult2;
+").
+
+rem(A, B) = Res :-
+    ( zero(B) ->
+        throw(math.domain_error("mp_int.rem: division by zero"))
+    ;
+        mp_rem(A, B, Result, Rem0),
+        ( Result = mp_result_okay ->
+            Res = Rem0
+        ;
+            ( Result = mp_result_out_of_mem ->
+                error("could not initialize mp_int")
+            ;
+                throw(math.domain_error("mp_int.rem: could not \
+compute remainder"))
+            )
+        )
+    ).
+
+:- pred mp_rem(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_rem(A::in, B::in, Result::out, Rem::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  Rem        = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(Rem);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_div(A, B, NULL, Rem);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+quotient(A, B) = Res :-
+    ( zero(B) ->
+        throw(math.domain_error("mp_int.quotient: division by zero"))
+    ;
+        mp_quot(A, B, Result, Quot0),
+        ( Result = mp_result_okay ->
+            Res = Quot0
+        ;
+            ( Result = mp_result_out_of_mem ->
+                error("could not initialize mp_int")
+            ;
+                throw(math.domain_error("mp_int.quotient: could not \
+compute quotient"))
+            )
+        )
+    ).
+
+:- pred mp_quot(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out)
+    is det.
+:- pragma foreign_proc("C",
+                      mp_quot(A::in, B::in, Result::out, Quot::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int initResult, opResult;
+  Quot       = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(Quot);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_div(A, B, Quot, NULL);
+      Result   = opResult;
+    }
+  else
+    Result     = initResult;
 ").
 
 mp_square(A, C) :-
@@ -880,9 +949,7 @@ A + B = C       :- mp_add(A, B, C).
 A - B = C       :- mp_sub(A, B, C).
 -A = C          :- mp_neg(A, C).
 A * B = C       :- mp_mul(A, B, C).
-A // B = C      :- divide_with_rem(A, B, C, _).
-quotient(A, B)  = A // B.
-A rem B = C     :- divide_with_rem(A, B, _, C).
+A // B          = quotient(A, B).
 square(X) = Res :- mp_square(X, Res).
 
 %---------------------------------------------------------------------------%
@@ -992,7 +1059,7 @@ invmod(A, B) = Res :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            throw(math.domain_error("mp_int.mp_invmod: could not compute\
+            throw(math.domain_error("mp_int.invmod: could not compute\
 modular inverse"))
         )
     ).
@@ -1121,7 +1188,7 @@ A /\ B = C :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            throw(math.domain_error("mp_int.mp_and: could not compute bitwise \
+            throw(math.domain_error("mp_int./\\: could not compute bitwise \
 AND"))
         )
     ).
@@ -1151,7 +1218,7 @@ A \/ B = C :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            throw(math.domain_error("mp_int.mp_and: could not compute bitwise \
+            throw(math.domain_error("mp_int.\\/: could not compute bitwise \
 OR"))
         )
     ).
@@ -1181,7 +1248,7 @@ A `xor` B = C :-
         ( Result = mp_result_out_of_mem ->
             error("could not initialize mp_int")
         ;
-            throw(math.domain_error("mp_int.mp_and: could not compute bitwise \
+            throw(math.domain_error("mp_int.xor: could not compute bitwise \
 XOR"))
         )
     ).
