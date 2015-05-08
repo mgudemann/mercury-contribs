@@ -969,7 +969,7 @@ pow(A, N) = Res :-
     ( is_zero(N) ->
         Res = one
     ;
-        ( is_even(N) ->
+        ( is_odd(N) ->
             Res = A * pow(A, N - one)
         ;
             divide_by_2(N, N0),
