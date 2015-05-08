@@ -209,6 +209,10 @@
     %
 :- func mp_int `xor` mp_int = mp_int.
 
+    % Bitwise complement.
+    %
+:- func \ mp_int = mp_int.
+
     % Constant 0.
     %
 :- func zero = mp_int.
@@ -1265,6 +1269,40 @@ XOR"))
     {
       opResult = mp_xor(A, B, C);
       Result   = opResult;
+    }
+  else
+    Result     = initResult;
+").
+
+\ X = Y :-
+    mp_compl(X, Result, Y0),
+    ( Result = mp_result_okay ->
+        Y = Y0
+    ;
+        error("could not initialize mp_int")
+    ).
+
+:- pred mp_compl(mp_int::in, mp_result_type::out, mp_int::out) is det.
+:- pragma foreign_proc("C",
+                      mp_compl(A::in, Result::out, B::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  int i, initResult, opResult;
+  mp_digit tmpVal;
+  B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
+  initResult = mp_init(B);
+  if (initResult == MP_OKAY)
+    {
+      opResult = mp_copy(A, B);
+      Result   = opResult;
+      if (opResult == MP_OKAY)
+        {
+          for(i = 0; i < USED(A); i++)
+            {
+              tmpVal = B->dp[i];
+              B->dp[i] = (~tmpVal & MP_MASK);
+            }
+        }
     }
   else
     Result     = initResult;
