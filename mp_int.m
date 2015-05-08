@@ -36,10 +36,6 @@
     %
 :- func '-'(mp_int) = mp_int.
 
-    % Absolute Value.
-    %
-:- func 'abs'(mp_int) = mp_int.
-
     % Multiplication.
     %
 :- func '*'(mp_int, mp_int) = mp_int.
@@ -47,12 +43,15 @@
     % Truncating integer division, e.g., (-10) // 3 = (-3).
     %
 :- func '//'(mp_int, mp_int) = mp_int.
-:- func 'quotient'(mp_int, mp_int) = mp_int.
 
     % Remainder.
     % X rem Y = X - (X // Y) * Y
     %
 :- func 'rem'(mp_int, mp_int) = mp_int.
+
+    % Absolute value.
+    %
+:- func abs(mp_int) = mp_int.
 
     % Squaring.
     %
@@ -60,42 +59,40 @@
 
     % Truncating integer division with remainder.
     %
-:- pred quot_with_rem(mp_int::in, mp_int::in, mp_int::out, mp_int::out)
+:- pred divide_with_rem(mp_int::in, mp_int::in, mp_int::out, mp_int::out)
     is det.
 
     % Multiplication by 2.
     %
-:- pred mp_mul_2(mp_int::in, mp_int::out) is det.
+:- pred multiply_by_2(mp_int::in, mp_int::out) is det.
 
     % Division by 2.
     %
-:- pred mp_div_2(mp_int::in, mp_int::out) is det.
+:- pred divide_by_2(mp_int::in, mp_int::out) is det.
 
     % Shift Left.
     %
-:- func shift_left(mp_int, int) = mp_int.
 :- func '<<'(mp_int, int) = mp_int.
 
     % Shift Right.
     %
-:- func shift_right(mp_int, int) =  mp_int.
 :- func '>>'(mp_int, int) = mp_int.
 
-    % zero(X) if X is 0.
+    % is_zero(X) if X is 0.
     %
-:- pred zero(mp_int::in) is semidet.
+:- pred is_zero(mp_int::in) is semidet.
 
-    % even(X) if X is even.
+    % is_even(X) if X is even.
     %
-:- pred even(mp_int::in) is semidet.
+:- pred is_even(mp_int::in) is semidet.
 
-    % odd(X) if X is odd.
+    % is_odd(X) if X is odd.
     %
-:- pred odd(mp_int::in) is semidet.
+:- pred is_odd(mp_int::in) is semidet.
 
-    % negative(X) if X is negative.
+    % is_negative(X) if X is negative.
     %
-:- pred negative(mp_int::in) is semidet.
+:- pred is_negative(mp_int::in) is semidet.
 
     % Greater than.
     %
@@ -115,10 +112,10 @@
 
     % Equal.
     %
-:- pred mp_eq(mp_int::in, mp_int::in) is semidet.
+:- pred equal(mp_int::in, mp_int::in) is semidet.
 
     % Exponentiation.
-    % Throws exception `math.domain_error` is Y is negative.
+    % Throws exception `math.domain_error` if Y is negative.
     %
 :- func pow(mp_int, mp_int) = mp_int.
 
@@ -132,7 +129,12 @@
     %
 :- func det_to_int(mp_int) = int.
 
+    % to_base_string(Mp_Int, Base) = String:
+    %
     % Convert mp_int to a string in given base.
+    %
+    % Base must be between 2 and 64, inclusive; if it is not, the predicate will
+    % throw and exception.
     %
 :- func to_base_string(mp_int, int) = string.
 
@@ -140,58 +142,35 @@
     %
 :- func to_string(mp_int) = string.
 
-    % Convert string in given base to mp_int. Fails if unsuccesful.
+    % from_base_string(String, Base, Mp_Int):
+    %
+    % Convert string in given base to mp_int.
+    %
+    % Base must be between 2 and 64, inclusive; fails if unsuccessful.
     %
 :- pred from_base_string(string::in, int::in, mp_int::out) is semidet.
-
 :- func from_base_string(string, int) = mp_int is semidet.
 
     % Convert string in base 10 to mp_int. Fails if unsuccesful.
     %
 :- func from_string(string) = mp_int is semidet.
 
-    % As function above, exits on error/1 instead of failing.
+    % As above, throws exception instead of failing if unsuccessful.
     %
 :- func det_from_string(string) = mp_int.
 
-    % As function above, exits on error/1 instead of failing.
+    % As above, throws exception instead of failing if unsuccessful.
     %
 :- func det_from_base_string(string, int) = mp_int.
 
-    % Construct mp_int from int.
+    % Convert an int to an mp_int.
     %
 :- func mp_int(int) = mp_int.
 
-    % Greatest common divisor.
-    %
-:- func gcd(mp_int, mp_int) = mp_int.
-
-    % Least common multiple.
-    %
-:- func lcm(mp_int, mp_int) = mp_int.
-
-    % Jacobi symbol.
-    %
-:- func jacobi(mp_int, mp_int) = int.
-
-    % Modular inverse C = A^(-1) mod B
-    %
-:- func invmod(mp_int, mp_int) = mp_int.
-
-    % Modular exponentiation A = B^C mod D.
-    %
-:- func exptmod(mp_int, mp_int, mp_int) = mp_int.
-
-    % Probabilitic primality test.
-    %
-:- pred is_prime(mp_int::in) is semidet.
-
-    % Probabilistic primality test with given number of rounds. Probability of
-    % reporting composite number for a prime is ca. (1/4)^(-#Rounds)
-    %
-:- pred is_prime(mp_int::in, int::in) is semidet.
-
     % Square root of mp_int.
+    %
+    % sqrt(X, Sqrt) is true if Sqrt is the positive square root of X.
+    % Fails if X is negative.
     %
 :- pred sqrt(mp_int::in, mp_int::out) is semidet.
 
@@ -215,6 +194,49 @@
     %
 :- func \ mp_int = mp_int.
 
+    % Greatest common divisor.
+    %
+:- func gcd(mp_int, mp_int) = mp_int.
+
+    % Least common multiple.
+    %
+:- func lcm(mp_int, mp_int) = mp_int.
+
+    % jacobi(A, N) = C:
+    %
+    % Computes Jacobi symbol.
+    %
+    % C = J(A, N) = L(A, P_1)^(i_1) * ... * L(A, P_k)^(i_k) where
+    %
+    % A = P_1^(i_1) * ... * P_k^(i_k) with P_j is prime, and
+    %
+    %            / 1, if a is a quadratic residue modulo p, and a \= 0 (mod p)
+    % L(A, P) = | -1, if a is a quadratic non-residue modulo p
+    %            \ 0, if a is a multiple of p
+    %
+:- func jacobi(mp_int, mp_int) = int.
+
+    % invmod(A, B) = C:
+    %
+    % Modular inverse C = A^(-1) mod B
+    %
+:- func invmod(mp_int, mp_int) = mp_int.
+
+    % exptmod(A, B, C, D):
+    %
+    % Modular exponentiation D = A^B mod C.
+    %
+:- func exptmod(mp_int, mp_int, mp_int) = mp_int.
+
+    % Probabilitic primality test.
+    %
+:- pred is_prime(mp_int::in) is semidet.
+
+    % Probabilistic primality test with given number of rounds. Probability of
+    % reporting composite number for a prime is ca. (1/4)^(-#Rounds)
+    %
+:- pred is_prime(mp_int::in, int::in) is semidet.
+
     % Constant 0.
     %
 :- func zero = mp_int.
@@ -229,7 +251,7 @@
 
     % Constant -1.
     %
-:- func minusone = mp_int.
+:- func negative_one = mp_int.
 
     % Constant 10.
     %
@@ -253,7 +275,7 @@
    % Type declaration for foreign type mp_int*.
    %
 :- pragma foreign_type("C", mp_int, "mp_int*")
-    where equality is mp_eq, comparison is mp_cmp.
+    where equality is equal, comparison is mp_cmp.
 :- pragma foreign_decl("C",
                       "#include \"tommath.h\"").
 
@@ -286,15 +308,7 @@
 % module internal predicate declarations
 %---------------------------------------------------------------------------%
 
-:- pred mp_add(mp_int::in, mp_int::in, mp_int::out) is det.
-:- pred mp_sub(mp_int::in, mp_int::in, mp_int::out) is det.
-:- pred mp_neg(mp_int::in, mp_int::out) is det.
-:- pred mp_abs(mp_int::in, mp_int::out) is det.
-:- pred mp_mul(mp_int::in, mp_int::in, mp_int::out) is det.
-:- pred mp_square(mp_int::in, mp_int::out) is det.
-
 :- pred mp_init(int::in, mp_int::out) is det.
-
 mp_init(N, Res) :-
     mp_init(N, Result, Res0),
     ( Result = mp_result_okay ->
@@ -324,16 +338,18 @@ mp_init(N, Res) :-
 % basic arithmetic
 %---------------------------------------------------------------------------%
 
+:- pred mp_add(mp_int::in, mp_int::in, mp_int::out) is det.
 mp_add(A, B, C) :-
     mp_add(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_add: could not add"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.mp_add: could not add"))
     ).
 
 :- pred mp_add(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -353,16 +369,18 @@ mp_add(A, B, C) :-
     Result     = initResult;
 ").
 
+:- pred mp_sub(mp_int::in, mp_int::in, mp_int::out) is det.
 mp_sub(A, B, C) :-
     mp_sub(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_sub: could not subtract"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.mp_sub: could not subtract"))
     ).
 
 :- pred mp_sub(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -382,6 +400,7 @@ mp_sub(A, B, C) :-
     Result     = initResult;
 ").
 
+:- pred mp_neg(mp_int::in, mp_int::out) is det.
 mp_neg(A, C) :-
     mp_neg(A, Result, C0),
     ( Result = mp_result_okay ->
@@ -411,17 +430,19 @@ mp_neg(A, C) :-
     Result     = initResult;
 ").
 
+:- pred mp_abs(mp_int::in, mp_int::out) is det.
 mp_abs(A, C) :-
     mp_abs(A, Result, C0),
-    ( Result = mp_result_okay ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_abs: could not compute \
-absolute value"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error(
+            "mp_int.mp_abs: could not compute absolute value"))
     ).
 
 :- pred mp_abs(mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -443,16 +464,18 @@ absolute value"))
 
 abs(A) = Res :- mp_abs(A, Res).
 
+:- pred mp_mul(mp_int::in, mp_int::in, mp_int::out) is det.
 mp_mul(A, B, C) :-
     mp_mul(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_mul: could not multiply"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.mp_mul: could not multiply"))
     ).
 
 :- pred mp_mul(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -472,16 +495,17 @@ mp_mul(A, B, C) :-
     Result     = initResult;
 ").
 
-mp_mul_2(A, C) :-
+multiply_by_2(A, C) :-
     mp_mul_2(A, Result, C0),
-    ( Result = mp_result_okay ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_mul_2: could not double value"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.multiply_by_2: could not double value"))
     ).
 
 :- pred mp_mul_2(mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -501,16 +525,17 @@ mp_mul_2(A, C) :-
     Result     = initResult;
 ").
 
-mp_div_2(A, C) :-
+divide_by_2(A, C) :-
     mp_div_2(A, Result, C0),
-    ( Result = mp_result_okay ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_div_2: could not halve value"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.divide_by_2: could not halve value"))
     ).
 
 :- pred mp_div_2(mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -530,21 +555,22 @@ mp_div_2(A, C) :-
     Result     = initResult;
 ").
 
-quot_with_rem(A, B, Quot, Rem) :-
-    ( zero(B) ->
-        throw(math.domain_error("mp_int.quot_with_rem: division by zero"))
+divide_with_rem(A, B, Quot, Rem) :-
+    ( is_zero(B) ->
+        throw(math.domain_error("mp_int.quot_with_rem: division by is_zero"))
     ;
         mp_quot_rem(A, B, Result, Quot0, Rem0),
-        ( Result = mp_result_okay ->
-            Quot = Quot0,
-            Rem = Rem0
+        (
+          Result = mp_result_okay,
+          Quot = Quot0,
+          Rem = Rem0
         ;
-            ( Result = mp_result_out_of_mem ->
-                error("could not initialize mp_int")
-            ;
-                throw(math.domain_error("mp_int.quot_with_rem: could not \
-compute quotient and remainder"))
-            )
+          Result = mp_result_out_of_mem,
+          error("could not initialize mp_int")
+        ;
+          Result = mp_result_invalid_input,
+          throw(math.domain_error(
+            "mp_int.quot_with_rem: could not compute quotient and remainder"))
         )
     ).
 
@@ -570,19 +596,20 @@ compute quotient and remainder"))
 ").
 
 rem(A, B) = Res :-
-    ( zero(B) ->
-        throw(math.domain_error("mp_int.rem: division by zero"))
+    ( is_zero(B) ->
+        throw(math.domain_error("mp_int.rem: division by is_zero"))
     ;
         mp_rem(A, B, Result, Rem0),
-        ( Result = mp_result_okay ->
-            Res = Rem0
+        (
+          Result = mp_result_okay,
+          Res = Rem0
         ;
-            ( Result = mp_result_out_of_mem ->
-                error("could not initialize mp_int")
-            ;
-                throw(math.domain_error("mp_int.rem: could not \
-compute remainder"))
-            )
+          Result = mp_result_out_of_mem,
+          error("could not initialize mp_int")
+        ;
+          Result = mp_result_invalid_input,
+          throw(math.domain_error(
+                "mp_int.rem: could not compute remainder"))
         )
     ).
 
@@ -603,20 +630,22 @@ compute remainder"))
     Result     = initResult;
 ").
 
+:- func quotient(mp_int, mp_int) = mp_int.
 quotient(A, B) = Res :-
-    ( zero(B) ->
-        throw(math.domain_error("mp_int.quotient: division by zero"))
+    ( is_zero(B) ->
+        throw(math.domain_error("mp_int.quotient: division by is_zero"))
     ;
         mp_quot(A, B, Result, Quot0),
-        ( Result = mp_result_okay ->
-            Res = Quot0
+        (
+          Result = mp_result_okay,
+          Res = Quot0
         ;
-            ( Result = mp_result_out_of_mem ->
-                error("could not initialize mp_int")
-            ;
-                throw(math.domain_error("mp_int.quotient: could not \
-compute quotient"))
-            )
+          Result = mp_result_out_of_mem,
+          error("could not initialize mp_int")
+        ;
+          Result = mp_result_invalid_input,
+          throw(math.domain_error(
+                "mp_int.quotient: could not compute quotient"))
         )
     ).
 
@@ -638,16 +667,18 @@ compute quotient"))
     Result     = initResult;
 ").
 
+:- pred mp_square(mp_int::in, mp_int::out) is det.
 mp_square(A, C) :-
     mp_square(A, Result, C0),
-    ( Result = mp_result_okay ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_square: could not square"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.mp_square: could not square"))
     ).
 
 :- pred mp_square(mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -692,7 +723,7 @@ to_int(A, N) :-
 "
   unsigned long n;
   n = mp_get_long(A);
-  N = n;
+  N = (int) n;
 ").
 
 det_to_int(A) = Res :-
@@ -732,14 +763,14 @@ to_string(A) = to_base_string(A, 10).
 
 from_base_string(S, Radix, A) :-
     mp_from_string(S, Radix, Result, A0),
-    ( Result = mp_result_okay ->
-        A = A0
+    (
+      Result = mp_result_okay,
+      A = A0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            fail
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      fail
     ).
 
 :- pred mp_from_string(string::in, int::in, mp_result_type::out, mp_int::out)
@@ -790,16 +821,17 @@ mp_int(N) = Res :-
 % bit shifting
 %---------------------------------------------------------------------------%
 
-shift_left(A, N) = Res :-
+A << N = Res :-
     mp_shift_left(A, N, Result, A0),
-    ( Result = mp_result_okay ->
-        Res = A0
+    (
+      Result = mp_result_okay,
+      Res = A0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.shift_left: could not shift"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.shift_left: could not shift"))
     ).
 
 :- pred mp_shift_left(mp_int::in, int::in, mp_result_type::out, mp_int::out)
@@ -820,16 +852,17 @@ shift_left(A, N) = Res :-
     Result     = initResult;
 ").
 
-shift_right(A, N) = Res :-
+A >> N = Res :-
     mp_shift_right(A, N, Result, A0),
-    ( Result = mp_result_okay ->
-        Res = A0
+    (
+      Result = mp_result_okay,
+      Res = A0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.shift_right: could not shift"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.shift_right: could not shift"))
     ).
 
 :- pred mp_shift_right(mp_int::in, int::in, mp_result_type::out, mp_int::out)
@@ -850,68 +883,36 @@ shift_right(A, N) = Res :-
     Result     = initResult;
 ").
 
-X << N = shift_left(X, N).
-
-X >> N = shift_right(X, N).
-
 %---------------------------------------------------------------------------%
 % test predicates
 %---------------------------------------------------------------------------%
 
-zero(A) :-
-    mp_iszero(A, Result),
-    Result = mp_bool_yes.
-
-:- pred mp_iszero(mp_int::in, mp_bool_type::out) is det.
 :- pragma foreign_proc("C",
-                      mp_iszero(A::in, Result::out),
+                      is_zero(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int opResult;
-  opResult = mp_iszero(A);
-  Result   = opResult;
+  SUCCESS_INDICATOR = mp_iszero(A) ? MR_TRUE : MR_FALSE;
 ").
 
-even(A) :-
-    mp_iseven(A, Result),
-    Result = mp_bool_yes.
-
-:- pred mp_iseven(mp_int::in, mp_bool_type::out) is det.
 :- pragma foreign_proc("C",
-                      mp_iseven(A::in, Result::out),
+                      is_even(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int opResult;
-  opResult = mp_iseven(A);
-  Result   = opResult;
+  SUCCESS_INDICATOR = mp_iseven(A) ? MR_TRUE : MR_FALSE;
 ").
 
-odd(A) :-
-    mp_isodd(A, Result),
-    Result = mp_bool_yes.
-
-:- pred mp_isodd(mp_int::in, mp_bool_type::out) is det.
 :- pragma foreign_proc("C",
-                      mp_isodd(A::in, Result::out),
+                      is_odd(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int opResult;
-  opResult = mp_isodd(A);
-  Result   = opResult;
+  SUCCESS_INDICATOR = mp_isodd(A) ? MR_TRUE : MR_FALSE;
 ").
 
-negative(A) :-
-    mp_isneg(A, Result),
-    Result = mp_bool_yes.
-
-:- pred mp_isneg(mp_int::in, mp_bool_type::out) is det.
 :- pragma foreign_proc("C",
-                      mp_isneg(A::in, Result::out),
+                      is_negative(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int opResult;
-  opResult = mp_isneg(A);
-  Result   = opResult;
+  SUCCESS_INDICATOR = mp_isneg(A) ? MR_TRUE : MR_FALSE;
 ").
 
 %---------------------------------------------------------------------------%
@@ -949,7 +950,7 @@ A =< B :-
     mp_cmp(C, A, B),
     ( C = (<); C = (=)).
 
-mp_eq(A, B) :- mp_cmp((=), A, B).
+equal(A, B) :- mp_cmp((=), A, B).
 
 %---------------------------------------------------------------------------%
 
@@ -965,13 +966,13 @@ square(X) = Res :- mp_square(X, Res).
 %---------------------------------------------------------------------------%
 
 pow(A, N) = Res :-
-    ( zero(N) ->
+    ( is_zero(N) ->
         Res = one
     ;
-        ( N rem two = one ->
+        ( is_even(N) ->
             Res = A * pow(A, N - one)
         ;
-            mp_div_2(N, N0),
+            divide_by_2(N, N0),
             SQ = pow(A, N0),
             mp_square(SQ, Res)
         )
@@ -983,14 +984,15 @@ pow(A, N) = Res :-
 
 gcd(A, B) = Res :-
     mp_gcd(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        Res = C0
+    (
+      Result = mp_result_okay ,
+      Res = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.gcd: could not compute gcd"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.gcd: could not compute gcd"))
     ).
 
 :- pred mp_gcd(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -1012,14 +1014,15 @@ gcd(A, B) = Res :-
 
 lcm(A, B) = Res :-
     mp_lcm(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        Res = C0
+    (
+      Result = mp_result_okay ,
+      Res = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.lcm: could not compute lcm"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.lcm: could not compute lcm"))
     ).
 
 :- pred mp_lcm(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -1044,8 +1047,8 @@ jacobi(A, P) = Res :-
     ( Result = mp_result_okay  ->
         Res = C0
     ;
-        throw(math.domain_error("mp_int.jacobi: could not compute Jacobi \
-symbol of mp_int"))
+        throw(math.domain_error(
+              "mp_int.jacobi: could not compute Jacobi symbol of mp_int"))
     ).
 
 :- pred mp_jacobi(mp_int::in, mp_int::in, mp_result_type::out, int::out) is det.
@@ -1061,15 +1064,16 @@ symbol of mp_int"))
 
 invmod(A, B) = Res :-
     mp_invmod(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        Res = C0
+    (
+      Result = mp_result_okay ,
+      Res = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.invmod: could not compute\
-modular inverse"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error(
+            "mp_int.invmod: could not compute modular inverse"))
     ).
 
 :- pred mp_invmod(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out)
@@ -1092,15 +1096,16 @@ modular inverse"))
 
 exptmod(A, B, C) = Res :-
     mp_exptmod(A, B, C, Result, D0),
-    ( Result = mp_result_okay  ->
-        Res = D0
+    (
+      Result = mp_result_okay ,
+      Res = D0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.exptmod: could not compute modular \
-exponentiation"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error(
+            "mp_int.exptmod: could not compute modular exponentiation"))
     ).
 
 :- pred mp_exptmod(mp_int::in, mp_int::in, mp_int::in, mp_result_type::out,
@@ -1149,15 +1154,15 @@ is_prime(A, Rounds) :-
 ").
 
 sqrt(A, Res) :-
-    ( A >= zero ->
+    ( is_negative(A) ->
+        fail
+    ;
         mp_sqrt(A, Result, C0),
         ( Result = mp_result_okay  ->
             Res = C0
         ;
             error("could not initialize mp_int")
         )
-    ;
-        fail
     ).
 
 :- pred mp_sqrt(mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -1190,15 +1195,15 @@ det_sqrt(A) = Res :-
 
 A /\ B = C :-
     mp_and(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        C = C0
+    (
+      Result = mp_result_okay ,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int./\\: could not compute bitwise \
-AND"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int./\\: could not compute bitwise AND"))
     ).
 
 :- pred mp_and(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -1220,15 +1225,15 @@ AND"))
 
 A \/ B = C :-
     mp_or(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        C = C0
+    (
+      Result = mp_result_okay ,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.\\/: could not compute bitwise \
-OR"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.\\/: could not compute bitwise OR"))
     ).
 
 :- pred mp_or(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -1250,15 +1255,15 @@ OR"))
 
 A `xor` B = C :-
     mp_xor(A, B, Result, C0),
-    ( Result = mp_result_okay  ->
-        C = C0
+    (
+      Result = mp_result_okay ,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.xor: could not compute bitwise \
-XOR"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.xor: could not compute bitwise XOR"))
     ).
 
 :- pred mp_xor(mp_int::in, mp_int::in, mp_result_type::out, mp_int::out) is det.
@@ -1316,10 +1321,10 @@ XOR"))
 % often used constants
 %---------------------------------------------------------------------------%
 
-minusone = mp_int(-1).
-zero     = mp_int(0).
-one      = mp_int(1).
-two      = mp_int(2).
-ten      = mp_int(10).
+negative_one = mp_int(-1).
+zero         = mp_int(0).
+one          = mp_int(1).
+two          = mp_int(2).
+ten          = mp_int(10).
 
 :- end_module mp_int.
