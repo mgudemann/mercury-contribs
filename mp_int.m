@@ -134,7 +134,7 @@
 
     % Convert mp_int to a string in given base.
     %
-:- pred to_base_string(mp_int::in, int::in, string::out) is det.
+:- func to_base_string(mp_int, int) = string.
 
     % Convert mp_int to a string in base 10.
     %
@@ -142,7 +142,9 @@
 
     % Convert string in given base to mp_int. Fails if unsuccesful.
     %
-:- pred from_string(string::in, int::in, mp_int::out) is semidet.
+:- pred from_base_string(string::in, int::in, mp_int::out) is semidet.
+
+:- func from_base_string(string, int) = mp_int is semidet.
 
     % Convert string in base 10 to mp_int. Fails if unsuccesful.
     %
@@ -700,7 +702,7 @@ det_to_int(A) = Res :-
         throw(math.domain_error("mp_int.det_to_int: not in int range"))
     ).
 
-to_base_string(A, Radix, S) :-
+to_base_string(A, Radix) = S :-
     mp_to_string(A, Radix, Result, S0),
     ( Result = mp_result_okay ->
         S = S0
@@ -726,9 +728,9 @@ to_base_string(A, Radix, S) :-
     Result     = opResult;
 ").
 
-to_string(A) = Res :- to_base_string(A, 10, Res).
+to_string(A) = to_base_string(A, 10).
 
-from_string(S, Radix, A) :-
+from_base_string(S, Radix, A) :-
     mp_from_string(S, Radix, Result, A0),
     ( Result = mp_result_okay ->
         A = A0
@@ -758,17 +760,19 @@ from_string(S, Radix, A) :-
     Result     = initResult;
 ").
 
-from_string(S) = Res :- from_string(S, 10, Res).
+from_base_string(S, R) = Res :- from_base_string(S, R, Res).
+
+from_string(S) = Res :- from_base_string(S, 10, Res).
 
 det_from_string(S) = Res :-
-    ( from_string(S, 10, Res0) ->
+    ( from_base_string(S, 10, Res0) ->
         Res = Res0
     ;
         error("could not create mp_int from string")
     ).
 
 det_from_base_string(S, Base) = Res :-
-    ( from_string(S, Base, Res0) ->
+    ( from_base_string(S, Base, Res0) ->
         Res = Res0
     ;
         error("could not create mp_int from string")
