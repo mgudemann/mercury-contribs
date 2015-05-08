@@ -1299,19 +1299,15 @@ A `xor` B = C :-
   int i, initResult, opResult;
   mp_digit tmpVal;
   B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(B);
+  initResult = mp_init_copy(B, A);
   if (initResult == MP_OKAY)
     {
-      opResult = mp_copy(A, B);
-      Result   = opResult;
-      if (opResult == MP_OKAY)
+      for(i = 0; i < USED(A); i++)
         {
-          for(i = 0; i < USED(A); i++)
-            {
-              tmpVal = B->dp[i];
-              B->dp[i] = (~tmpVal & MP_MASK);
-            }
+          tmpVal = B->dp[i];
+          B->dp[i] = (~tmpVal & MP_MASK);
         }
+      Result = MP_OKAY;
     }
   else
     Result     = initResult;
