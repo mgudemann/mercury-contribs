@@ -557,7 +557,7 @@ divide_by_2(A, C) :-
 
 divide_with_rem(A, B, Quot, Rem) :-
     ( is_zero(B) ->
-        throw(math.domain_error("mp_int.quot_with_rem: division by is_zero"))
+        throw(math.domain_error("mp_int.quot_with_rem: division by zero"))
     ;
         mp_quot_rem(A, B, Result, Quot0, Rem0),
         (
@@ -597,7 +597,7 @@ divide_with_rem(A, B, Quot, Rem) :-
 
 rem(A, B) = Res :-
     ( is_zero(B) ->
-        throw(math.domain_error("mp_int.rem: division by is_zero"))
+        throw(math.domain_error("mp_int.rem: division by zero"))
     ;
         mp_rem(A, B, Result, Rem0),
         (
@@ -633,7 +633,7 @@ rem(A, B) = Res :-
 :- func quotient(mp_int, mp_int) = mp_int.
 quotient(A, B) = Res :-
     ( is_zero(B) ->
-        throw(math.domain_error("mp_int.quotient: division by is_zero"))
+        throw(math.domain_error("mp_int.quotient: division by zero"))
     ;
         mp_quot(A, B, Result, Quot0),
         (
