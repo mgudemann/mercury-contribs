@@ -294,16 +294,6 @@
                        mp_result_invalid_input - "MP_VAL"
                       ]).
 
-:- type mp_bool_type --->
-      mp_bool_yes
-    ; mp_bool_no.
-
-:- pragma foreign_enum("C", mp_bool_type/0,
-                      [
-                       mp_bool_yes - "MP_YES",
-                       mp_bool_no  - "MP_NO"
-                      ]).
-
 %---------------------------------------------------------------------------%
 % module internal predicate declarations
 %---------------------------------------------------------------------------%
