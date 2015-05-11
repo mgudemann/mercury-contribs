@@ -267,6 +267,7 @@
 :- import_module int.
 :- import_module math.
 :- import_module require.
+:- import_module string.
 
 %---------------------------------------------------------------------------%
 % foreign declarations
@@ -278,6 +279,10 @@
     where equality is equal, comparison is mp_cmp.
 :- pragma foreign_decl("C",
                       "#include \"tommath.h\"").
+
+:- pragma foreign_code("C", "
+    MR_STATIC_ASSERT(mp_int, sizeof(unsigned long long) >= sizeof(MR_Integer));
+").
 
     % Result type to signal success or failure of external functions.
     %
@@ -312,16 +317,10 @@ mp_init(N, Res) :-
                       mp_init(Value::in, Result::out, Mp_Int::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   Mp_Int     = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(Mp_Int);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_set_int(Mp_Int, Value);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(Mp_Int);
+  if (Result == MP_OKAY)
+    Result   = mp_set_int(Mp_Int, Value);
 ").
 
 %---------------------------------------------------------------------------%
@@ -347,16 +346,10 @@ mp_add(A, B, C) :-
                       mp_add(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_add(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_add(A, B, C);
 ").
 
 :- pred mp_sub(mp_int::in, mp_int::in, mp_int::out) is det.
@@ -378,29 +371,24 @@ mp_sub(A, B, C) :-
                       mp_sub(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_sub(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_sub(A, B, C);
 ").
 
 :- pred mp_neg(mp_int::in, mp_int::out) is det.
 mp_neg(A, C) :-
     mp_neg(A, Result, C0),
-    ( Result = mp_result_okay ->
-        C = C0
+    (
+      Result = mp_result_okay,
+      C = C0
     ;
-        ( Result = mp_result_out_of_mem ->
-            error("could not initialize mp_int")
-        ;
-            throw(math.domain_error("mp_int.mp_neg: could not negate value"))
-        )
+      Result = mp_result_out_of_mem,
+      error("could not initialize mp_int")
+    ;
+      Result = mp_result_invalid_input,
+      throw(math.domain_error("mp_int.mp_neg: could not negate value"))
     ).
 
 :- pred mp_neg(mp_int::in, mp_result_type::out, mp_int::out)is det.
@@ -408,16 +396,10 @@ mp_neg(A, C) :-
                       mp_neg(A::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_neg(A, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_neg(A, C);
 ").
 
 :- pred mp_abs(mp_int::in, mp_int::out) is det.
@@ -440,16 +422,10 @@ mp_abs(A, C) :-
                       mp_abs(A::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_abs(A, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_abs(A, C);
 ").
 
 abs(A) = Res :- mp_abs(A, Res).
@@ -473,16 +449,10 @@ mp_mul(A, B, C) :-
                       mp_mul(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_mul(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_mul(A, B, C);
 ").
 
 multiply_by_2(A, C) :-
@@ -503,16 +473,10 @@ multiply_by_2(A, C) :-
                       mp_mul_2(A::in, Result::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(B);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_mul_2(A, B);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(B);
+  if (Result == MP_OKAY)
+    Result   = mp_mul_2(A, B);
 ").
 
 divide_by_2(A, C) :-
@@ -533,16 +497,10 @@ divide_by_2(A, C) :-
                       mp_div_2(A::in, Result::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(B);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_div_2(A, B);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(B);
+  if (Result == MP_OKAY)
+    Result   = mp_div_2(A, B);
 ").
 
 divide_with_rem(A, B, Quot, Rem) :-
@@ -608,16 +566,10 @@ rem(A, B) = Res :-
                       mp_rem(A::in, B::in, Result::out, Rem::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   Rem        = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(Rem);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_div(A, B, NULL, Rem);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(Rem);
+  if (Result == MP_OKAY)
+    Result   = mp_div(A, B, NULL, Rem);
 ").
 
 :- func quotient(mp_int, mp_int) = mp_int.
@@ -645,16 +597,10 @@ quotient(A, B) = Res :-
                       mp_quot(A::in, B::in, Result::out, Quot::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   Quot       = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(Quot);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_div(A, B, Quot, NULL);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(Quot);
+  if (Result == MP_OKAY)
+    Result   = mp_div(A, B, Quot, NULL);
 ").
 
 :- pred mp_square(mp_int::in, mp_int::out) is det.
@@ -676,16 +622,10 @@ mp_square(A, C) :-
                       mp_square(A::in, Result::out, A_SQ::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   A_SQ       = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(A_SQ);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_sqr(A, A_SQ);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(A_SQ);
+  if (Result == MP_OKAY)
+    Result   = mp_sqr(A, A_SQ);
 ").
 
 %---------------------------------------------------------------------------%
@@ -711,9 +651,7 @@ to_int(A, N) :-
                       mp_to_long(A::in, N::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  unsigned long n;
-  n = mp_get_long(A);
-  N = (int) n;
+  N = mp_get_long_long(A);
 ").
 
 det_to_int(A) = Res :-
@@ -737,16 +675,13 @@ to_base_string(A, Radix) = S :-
                       mp_to_string(A::in, Radix::in, Result::out, S::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int length, opResult;
-  opResult = mp_radix_size(A, Radix, &length);
-  if (opResult == MP_OKAY)
+  int length;
+  Result     = mp_radix_size(A, Radix, &length);
+  if (Result == MP_OKAY)
     {
       MR_allocate_aligned_string_msg(S, length, MR_ALLOC_ID);
-      opResult = mp_toradix(A, S, Radix);
-      Result   = opResult;
+      Result = mp_toradix(A, S, Radix);
     }
-  else
-    Result     = opResult;
 ").
 
 to_string(A) = to_base_string(A, 10).
@@ -769,16 +704,10 @@ from_base_string(S, Radix, A) :-
                       mp_from_string(S::in, Radix::in, Result::out, A::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   A          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(A);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_read_radix(A, S, Radix);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result = mp_init(A);
+  if (Result == MP_OKAY)
+    Result = mp_read_radix(A, S, Radix);
 ").
 
 from_base_string(S, R) = Res :- from_base_string(S, R, Res).
@@ -800,11 +729,15 @@ det_from_base_string(S, Base) = Res :-
     ).
 
 mp_int(N) = Res :-
-    mp_init(abs(N), Res0),
-    ( N < 0 ->
-        Res = -Res0
+    ( N > -max_int ->
+        mp_init(abs(N), Res0),
+        ( N < 0 ->
+            Res = -Res0
+        ;
+            Res = Res0
+        )
     ;
-        Res = Res0
+        Res = det_from_string(string.int_to_string(N))
     ).
 
 %---------------------------------------------------------------------------%
@@ -830,16 +763,10 @@ A << N = Res :-
                       mp_shift_left(A::in, N::in, Result::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init_copy(B, A);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_lshd(B, N);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init_copy(B, A);
+  if (Result == MP_OKAY)
+    Result   = mp_lshd(B, N);
 ").
 
 A >> N = Res :-
@@ -861,16 +788,10 @@ A >> N = Res :-
                       mp_shift_right(A::in, N::in, Result::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init_copy(B, A);
-  if (initResult == MP_OKAY)
-    {
-      mp_rshd(B, N);
-      Result   = MP_OKAY;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init_copy(B, A);
+  if (Result == MP_OKAY)
+    mp_rshd(B, N);
 ").
 
 %---------------------------------------------------------------------------%
@@ -958,14 +879,12 @@ square(X) = Res :- mp_square(X, Res).
 pow(A, N) = Res :-
     ( is_zero(N) ->
         Res = one
+    ; is_odd(N) ->
+        Res = A * pow(A, N - one)
     ;
-        ( is_odd(N) ->
-            Res = A * pow(A, N - one)
-        ;
-            divide_by_2(N, N0),
-            SQ = pow(A, N0),
-            mp_square(SQ, Res)
-        )
+        divide_by_2(N, N0),
+        SQ = pow(A, N0),
+        mp_square(SQ, Res)
     ).
 
 %---------------------------------------------------------------------------%
@@ -990,16 +909,10 @@ gcd(A, B) = Res :-
                       mp_gcd(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_gcd(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_gcd(A, B, C);
 ").
 
 lcm(A, B) = Res :-
@@ -1020,16 +933,10 @@ lcm(A, B) = Res :-
                       mp_lcm(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_lcm(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_lcm(A, B, C);
 ").
 
 jacobi(A, P) = Res :-
@@ -1046,10 +953,9 @@ jacobi(A, P) = Res :-
                       mp_jacobi(A::in, P::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int opResult, res;
-  opResult = mp_jacobi(A, P, &res);
-  Result   = opResult;
-  C        = res;
+  int res;
+  Result = mp_jacobi(A, P, &res);
+  C      = res;
 ").
 
 invmod(A, B) = Res :-
@@ -1072,16 +978,10 @@ invmod(A, B) = Res :-
                       mp_invmod(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_invmod(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_invmod(A, B, C);
 ").
 
 exptmod(A, B, C) = Res :-
@@ -1104,16 +1004,10 @@ exptmod(A, B, C) = Res :-
                       mp_exptmod(A::in, B::in, C::in, Result::out, D::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   D          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(D);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_exptmod(A, B, C, D);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(D);
+  if (Result == MP_OKAY)
+    Result   = mp_exptmod(A, B, C, D);
 ").
 
     % Default number of rounds for Miller-Rabin primality test.
@@ -1137,10 +1031,9 @@ is_prime(A, Rounds) :-
                       mp_is_prime(A::in, Rounds::in, Result::out, Value::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int opResult, result;
-  opResult = mp_prime_is_prime(A, Rounds, &result);
+  int result;
+  Result = mp_prime_is_prime(A, Rounds, &result);
   Value    = result;
-  Result   = opResult;
 ").
 
 sqrt(A, Res) :-
@@ -1160,16 +1053,10 @@ sqrt(A, Res) :-
                       mp_sqrt(A::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_sqrt(A, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_sqrt(A, C);
 ").
 
 det_sqrt(A) = Res :-
@@ -1201,16 +1088,10 @@ A /\ B = C :-
                       mp_and(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_and(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_and(A, B, C);
 ").
 
 A \/ B = C :-
@@ -1231,16 +1112,10 @@ A \/ B = C :-
                       mp_or(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_or(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_or(A, B, C);
 ").
 
 A `xor` B = C :-
@@ -1261,16 +1136,10 @@ A `xor` B = C :-
                       mp_xor(A::in, B::in, Result::out, C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int initResult, opResult;
   C          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init(C);
-  if (initResult == MP_OKAY)
-    {
-      opResult = mp_xor(A, B, C);
-      Result   = opResult;
-    }
-  else
-    Result     = initResult;
+  Result     = mp_init(C);
+  if (Result == MP_OKAY)
+    Result   = mp_xor(A, B, C);
 ").
 
 \ X = Y :-
@@ -1286,21 +1155,16 @@ A `xor` B = C :-
                       mp_compl(A::in, Result::out, B::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  int i, initResult, opResult;
+  int i;
   mp_digit tmpVal;
   B          = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
-  initResult = mp_init_copy(B, A);
-  if (initResult == MP_OKAY)
-    {
-      for(i = 0; i < USED(A); i++)
-        {
-          tmpVal = B->dp[i];
-          B->dp[i] = (~tmpVal & MP_MASK);
-        }
-      Result = MP_OKAY;
-    }
-  else
-    Result     = initResult;
+  Result = mp_init_copy(B, A);
+  if (Result == MP_OKAY)
+    for(i = 0; i < USED(A); i++)
+      {
+        tmpVal = B->dp[i];
+        B->dp[i] = (~tmpVal & MP_MASK);
+      }
 ").
 
 %---------------------------------------------------------------------------%
