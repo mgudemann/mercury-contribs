@@ -280,6 +280,9 @@
 :- pragma foreign_decl("C",
                       "#include \"tommath.h\"").
 
+    % We assume unsigned long long to be at least as big as MR_Integer.
+    % This is currently required for the to_int predicates.
+    %
 :- pragma foreign_code("C", "
     MR_STATIC_ASSERT(mp_int, sizeof(unsigned long long) >= sizeof(MR_Integer));
 ").
