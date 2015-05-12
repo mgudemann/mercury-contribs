@@ -323,7 +323,7 @@ mp_init(N, Res) :-
   Mp_Int     = MR_GC_NEW_ATTRIB(mp_int, MR_ALLOC_ID);
   Result     = mp_init(Mp_Int);
   if (Result == MP_OKAY)
-    Result   = mp_set_int(Mp_Int, Value);
+    Result   = mp_set_long_long(Mp_Int, Value);
 ").
 
 %---------------------------------------------------------------------------%
@@ -732,15 +732,17 @@ det_from_base_string(S, Base) = Res :-
     ).
 
 mp_int(N) = Res :-
-    ( N > -max_int ->
-        mp_init(abs(N), Res0),
-        ( N < 0 ->
-            Res = -Res0
+    ( N < 0 ->
+        ( N = min_int ->
+            % Avoid `-min_int' as it overflows.
+            mp_init(-(min_int + 1), M),
+            Res = -(M + one)
         ;
-            Res = Res0
+            mp_init(-N, M),
+            Res = -M
         )
     ;
-        Res = det_from_string(string.int_to_string(N))
+        mp_init(N, Res)
     ).
 
 %---------------------------------------------------------------------------%
