@@ -303,6 +303,33 @@
                       ]).
 
 %---------------------------------------------------------------------------%
+% initialisation code to create static mp_ints for often used constants
+%---------------------------------------------------------------------------%
+
+:- initialise mp_initialize/0.
+:- impure pred mp_initialize is det.
+
+:- pragma foreign_decl("C", local,
+"
+static mp_int constant_negative_one;
+static mp_int constant_zero;
+static mp_int constant_one;
+static mp_int constant_two;
+static mp_int constant_ten;
+").
+
+:- pragma foreign_proc("C",
+                      mp_initialize,
+                      [will_not_call_mercury, thread_safe],
+"
+  mp_init_set(&constant_negative_one, -1);
+  mp_init_set(&constant_zero, 0);
+  mp_init_set(&constant_one, 1);
+  mp_init_set(&constant_two, 2);
+  mp_init_set(&constant_ten, 10);
+").
+
+%---------------------------------------------------------------------------%
 % module internal predicate declarations
 %---------------------------------------------------------------------------%
 
@@ -1176,10 +1203,44 @@ A `xor` B = C :-
 % often used constants
 %---------------------------------------------------------------------------%
 
-negative_one = mp_int(-1).
-zero         = mp_int(0).
-one          = mp_int(1).
-two          = mp_int(2).
-ten          = mp_int(10).
+:- pragma foreign_proc("C",
+    negative_one = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_negative_one;
+"
+).
+
+:- pragma foreign_proc("C",
+    zero = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_zero;
+"
+).
+
+:- pragma foreign_proc("C",
+    one = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_one;
+"
+).
+
+:- pragma foreign_proc("C",
+    two = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_two;
+"
+).
+
+:- pragma foreign_proc("C",
+    ten = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_ten;
+"
+).
 
 :- end_module mp_int.
